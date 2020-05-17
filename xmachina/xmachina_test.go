@@ -145,7 +145,7 @@ func parseBinClassLine(record []string) (inp, out math.Vector) {
 	return inp, out
 }
 
-func TestNetwork_Mnist(t *testing.T) {
+func testNetwork_Mnist(t *testing.T) {
 
 	// build the network
 	network := net.New(784, 10).Debug(true).
