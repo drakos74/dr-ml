@@ -1,0 +1,1 @@
+- [mnist train and test data](https://github.com/sausheong/gonn/tree/master/mnist_dataset)
