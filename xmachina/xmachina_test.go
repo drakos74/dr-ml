@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 
@@ -94,6 +95,8 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 
 func TestNetwork_BinaryClassificationStream(t *testing.T) {
 
+	start := time.Now().UnixNano()
+
 	// build the network
 	network := net.New(2, 1).Debug(true).
 		Add(2, net.Perceptron(ml.New(), math.Rand)). // hidden layer
@@ -103,14 +106,14 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 	defer close(data)
 
 	config := StreamingTraining(Training(0.0001, 100), 1, 1000)
-	defer close(config.epoch)
+	defer close(config.Epoch)
 
 	ack := make(Ack)
 
 	ctx, cnl := context.WithCancel(context.Background())
 	go TrainInStream(ctx, config, network, data, ack)
 
-	inputSet, outputSet, err := ReadFile("test/testdata/bin_class_input.csv", 10, 500, parseBinClassLine, data, config.epoch, ack)
+	inputSet, outputSet, err := ReadFile("test/testdata/bin_class_input.csv", 10, 500, parseBinClassLine, data, config.Epoch, ack)
 
 	if err != nil {
 		t.Fail()
@@ -124,6 +127,48 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 		r := outputSet[i]
 		assert.Equal(t, o, r)
 	}
+
+	d := time.Now().UnixNano() - start
+	println(fmt.Sprintf("d = %v", d))
+
+}
+
+func TestXNetwork_BinaryClassificationStream(t *testing.T) {
+
+	start := time.Now().UnixNano()
+	// build the network
+	network := net.XNew(2, 1).Debug(true).
+		Add(2, net.Perceptron(ml.New(), math.Rand)). // hidden layer
+		Add(1, net.Perceptron(ml.New(), math.Rand))  // output layer
+
+	data := make(Data)
+	defer close(data)
+
+	config := StreamingTraining(Training(0.0001, 100), 1, 1000)
+	defer close(config.Epoch)
+
+	ack := make(Ack)
+
+	ctx, cnl := context.WithCancel(context.Background())
+	go TrainInStream(ctx, config, network, data, ack)
+
+	inputSet, outputSet, err := ReadFile("test/testdata/bin_class_input.csv", 10, 500, parseBinClassLine, data, config.Epoch, ack)
+
+	if err != nil {
+		t.Fail()
+	}
+
+	cnl()
+
+	// check trained network performance
+	for i, input := range inputSet {
+		o := network.Predict(input).Round()
+		r := outputSet[i]
+		assert.Equal(t, o, r)
+	}
+
+	d := time.Now().UnixNano() - start
+	println(fmt.Sprintf("d = %v", d))
 
 }
 
@@ -145,13 +190,15 @@ func parseBinClassLine(record []string) (inp, out math.Vector) {
 	return inp, out
 }
 
-func testNetwork_Mnist(t *testing.T) {
+func TestNetwork_Mnist(t *testing.T) {
+
+	start := time.Now().Unix()
 
 	// build the network
-	network := net.New(784, 10).Debug(true).
-		Add(784, net.Perceptron(ml.New(), math.Rand)). // hidden layer
-		Add(200, net.Perceptron(ml.New(), math.Rand)). // hidden layer
-		Add(10, net.Perceptron(ml.New(), math.Rand))   // output layer
+	network := net.XNew(784, 10).Debug(true).
+		Add(784, net.Perceptron(ml.New().Rate(2), math.Rand)). // hidden layer
+		Add(200, net.Perceptron(ml.New().Rate(2), math.Rand)). // hidden layer
+		Add(10, net.Perceptron(ml.New().Rate(2), math.Rand))   // output layer
 
 	data := make(Data)
 
@@ -162,7 +209,7 @@ func testNetwork_Mnist(t *testing.T) {
 	ctx, cnl := context.WithCancel(context.Background())
 	go TrainInStream(ctx, config, network, data, ack)
 
-	_, _, err := ReadFile("test/testdata/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.epoch, ack)
+	_, _, err := ReadFile("test/testdata/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
 
 	if err != nil {
 		t.Fail()
@@ -177,19 +224,14 @@ func testNetwork_Mnist(t *testing.T) {
 
 	score := 0
 	rTest := csv.NewReader(bufio.NewReader(checkFile))
+	total := 0
 	for {
 		record, err := rTest.Read()
 		if err == io.EOF {
 			break
 		}
-		inputs := make([]float64, 784)
-		for i := range inputs {
-			if i == 0 {
-				inputs[i] = 1.0
-			}
-			x, _ := strconv.ParseFloat(record[i], 64)
-			inputs[i] = (x / 255.0 * 0.99) + 0.01
-		}
+		total++
+		inputs, _ := parseMnistLine(record)
 		outputs := network.Predict(inputs)
 		best := 0
 		highest := 0.0
@@ -205,8 +247,10 @@ func testNetwork_Mnist(t *testing.T) {
 		}
 	}
 
-	log.Println(fmt.Sprintf("score = %v", score))
+	log.Println(fmt.Sprintf("score = %v", float64(score)/float64(total)))
 
+	duration := time.Now().Unix() - start
+	println(fmt.Sprintf("duration = %v", duration))
 }
 
 func parseMnistLine(record []string) (inp, out math.Vector) {

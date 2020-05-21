@@ -54,17 +54,17 @@ func (t *InMemTraining) init() InMemTraining {
 
 type InStreamTraining struct {
 	InMemTraining
+	Epoch              Epoch
 	inputCountInterval int
 	outputSize         int
-	epoch              Epoch
 }
 
 func StreamingTraining(cfg InMemTraining, outputSize int, inputLogInterval int) InStreamTraining {
 	return InStreamTraining{
 		InMemTraining:      cfg,
+		Epoch:              make(Epoch),
 		outputSize:         outputSize,
 		inputCountInterval: inputLogInterval,
-		epoch:              make(Epoch),
 	}
 }
 
@@ -75,7 +75,7 @@ func (cfg *InStreamTraining) init() {
 	}
 }
 
-func TrainInMem(config InMemTraining, network *net.Network, inputSet xmath.Matrix, outputSet xmath.Matrix) {
+func TrainInMem(config InMemTraining, network net.NN, inputSet xmath.Matrix, outputSet xmath.Matrix) {
 
 	config = config.init()
 
@@ -93,20 +93,20 @@ func TrainInMem(config InMemTraining, network *net.Network, inputSet xmath.Matri
 		// log the iteration performance for monitoring
 		if config.debug && epoch%config.epochLogInterval == 0 {
 			score := loss - sumErr.Norm()
-			log.Println(fmt.Sprintf("epoch = %v , error = %v , learningScore = %v , weights = %v ", epoch, sumErr.Norm(), score, finalWeights))
+			log.Println(fmt.Sprintf("Epoch = %v , error = %v , learningScore = %v , weights = %v ", epoch, sumErr.Norm(), score, finalWeights))
 		}
 
 		loss = sumErr.Norm()
 
 		if sumErr.Norm() < config.lossThreshold {
-			log.Println(fmt.Sprintf("epoch = %v ,error => %v < %v , weights = %v ", epoch, sumErr.Norm(), config.lossThreshold, finalWeights))
+			log.Println(fmt.Sprintf("Epoch = %v ,error => %v < %v , weights = %v ", epoch, sumErr.Norm(), config.lossThreshold, finalWeights))
 			return
 		}
 
 	}
 }
 
-func TrainInStream(ctx context.Context, config InStreamTraining, network *net.Network, data Data, ack Ack) {
+func TrainInStream(ctx context.Context, config InStreamTraining, network net.NN, data Data, ack Ack) {
 
 	defer close(ack)
 
@@ -123,7 +123,7 @@ func TrainInStream(ctx context.Context, config InStreamTraining, network *net.Ne
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println(fmt.Sprintf("epoch = %v , error = %v , learningScore = %v , weights = %v. Stopped!", e, sumErr.Norm(), score, finalWeights))
+			log.Println(fmt.Sprintf("Epoch = %v , error = %v , learningScore = %v , weights = %v. Stopped!", e, sumErr.Norm(), score, finalWeights))
 			return
 		case pair := <-data:
 			i++
@@ -133,17 +133,17 @@ func TrainInStream(ctx context.Context, config InStreamTraining, network *net.Ne
 			if config.debug && i%config.inputCountInterval == 0 {
 				log.Println(fmt.Sprintf("e = %v , i = %v", e, i))
 			}
-		case <-config.epoch:
+		case <-config.Epoch:
 			e++
 			// log the iteration performance for monitoring
 			if config.debug && e%config.epochLogInterval == 0 {
 				score = loss - sumErr.Norm()
-				log.Println(fmt.Sprintf("epoch = %v , error = %v , learningScore = %v , weights = %v ... ", e, sumErr.Norm(), score, finalWeights))
+				log.Println(fmt.Sprintf("Epoch = %v , error = %v , learningScore = %v , weights = %v ... ", e, sumErr.Norm(), score, finalWeights))
 			}
 
 			loss = sumErr.Norm()
 
-			err := fmt.Errorf(fmt.Sprintf("epoch = %v ,error => %v < %v , weights = %v.", e, sumErr.Norm(), config.lossThreshold, finalWeights))
+			err := fmt.Errorf(fmt.Sprintf("Epoch = %v ,error => %v < %v , weights = %v.", e, sumErr.Norm(), config.lossThreshold, finalWeights))
 
 			if sumErr.Norm() < config.lossThreshold {
 				err = nil

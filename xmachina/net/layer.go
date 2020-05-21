@@ -1,6 +1,8 @@
 package net
 
-import "github.com/drakos74/go-ex-machina/xmachina/math"
+import (
+	"github.com/drakos74/go-ex-machina/xmachina/math"
+)
 
 type Layer struct {
 	neurons []*Neuron
@@ -52,5 +54,99 @@ func (l *Layer) backward(dv math.Matrix) math.Matrix {
 		// and produce partial error for previous layer
 		dn[i] = n.backward(err)
 	}
+	return dn
+}
+
+type xVector struct {
+	value math.Vector
+	index int
+}
+
+type xFloat struct {
+	value float64
+	index int
+}
+
+type xLayer struct {
+	neurons []*xNeuron
+	out     chan xFloat
+	backOut chan xVector
+}
+
+func newXLayer(p, n int, factory NeuronFactory, index int) xLayer {
+	neurons := make([]*xNeuron, n)
+
+	out := make(chan xFloat, n)
+	backout := make(chan xVector, n)
+
+	for i := 0; i < n; i++ {
+		n := &xNeuron{
+			Neuron: factory(p, meta{
+				index: i,
+				layer: index,
+			}),
+			input:   make(chan math.Vector, 1),
+			output:  out,
+			backIn:  make(chan float64, 1),
+			backOut: backout,
+		}
+		n.init()
+		neurons[i] = n
+	}
+	return xLayer{
+		neurons: neurons,
+		out:     out,
+		backOut: backout,
+	}
+}
+
+func (xl *xLayer) Size() int {
+	return len(xl.neurons)
+}
+
+func (xl *xLayer) forward(v math.Vector) math.Vector {
+
+	out := math.NewVector(len(xl.neurons))
+
+	for _, n := range xl.neurons {
+		n.input <- v
+	}
+
+	c := 0
+	for o := range xl.out {
+		out[o.index] = o.value
+		c++
+		if c == len(xl.neurons) {
+			break
+		}
+	}
+
+	return out
+}
+
+func (xl *xLayer) backward(dv math.Matrix) math.Matrix {
+	// we are building the error output for the previous layer
+	dn := math.NewMatrix(len(xl.neurons))
+
+	for i, n := range xl.neurons {
+		// for each neuron aggregate it's error
+		// the partial error should be at it's index in dv
+		var err float64
+		for _, v := range dv {
+			err += v[i]
+		}
+		// and produce partial error for previous layer
+		n.backIn <- err
+	}
+
+	c := 0
+	for o := range xl.backOut {
+		dn[o.index] = o.value
+		c++
+		if c == len(xl.neurons) {
+			break
+		}
+	}
+
 	return dn
 }

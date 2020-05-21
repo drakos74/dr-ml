@@ -24,7 +24,10 @@ func ReadFile(filename string, lines int, iterations int, parse func(record []st
 
 		var c int32
 
-		testFile, _ := os.Open(filename)
+		testFile, err := os.Open(filename)
+		if err != nil {
+			return inputSet, outputSet, err
+		}
 		rTrain := csv.NewReader(bufio.NewReader(testFile))
 
 		for {
@@ -59,7 +62,7 @@ func ReadFile(filename string, lines int, iterations int, parse func(record []st
 		epoch <- i
 
 		// wait for the acknowledgement
-		err := <-ack
+		err = <-ack
 		log.Println(fmt.Sprintf("err = %v", err))
 		if err == nil {
 			break

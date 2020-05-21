@@ -64,3 +64,31 @@ var Perceptron = func(module ml.Module, weights math.VectorGenerator) NeuronFact
 		}
 	}
 }
+
+type xNeuron struct {
+	*Neuron
+	input   chan math.Vector
+	output  chan xFloat
+	backIn  chan float64
+	backOut chan xVector
+}
+
+func (xn *xNeuron) init() *xNeuron {
+	go func(xn *xNeuron) {
+		for {
+			select {
+			case v := <-xn.input:
+				xn.output <- xFloat{
+					value: xn.Neuron.forward(v),
+					index: xn.Neuron.meta.index,
+				}
+			case e := <-xn.backIn:
+				xn.backOut <- xVector{
+					value: xn.Neuron.backward(e),
+					index: xn.Neuron.meta.index,
+				}
+			}
+		}
+	}(xn)
+	return xn
+}
