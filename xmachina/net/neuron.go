@@ -11,9 +11,10 @@ type meta struct {
 }
 
 type memory struct {
-	input  math.Vector
-	output float64
-	delta  math.Vector
+	input     math.Vector
+	rawOutput float64
+	output    float64
+	delta     math.Vector
 }
 
 type Neuron struct {
@@ -27,26 +28,32 @@ type Neuron struct {
 func (n *Neuron) forward(v math.Vector) float64 {
 	math.MustHaveSameSize(v, n.input)
 	n.input = v
-	n.output = n.Forward(v.Dot(n.weights) + n.bias)
+	n.rawOutput = v.Dot(n.weights) + n.bias
+	n.output = n.Forward(n.rawOutput)
 	if n.output >= 1 {
-		// TODO : notify of bad weight distribution
+		// TODO : notify of bad weight distribution (?)
 	}
 	return n.output
 }
 
 // TODO : backward for bias
 func (n *Neuron) backward(err float64) math.Vector {
-	// build the error vector for the previous layer
-	dw := math.NewVector(len(n.weights))
+	loss := math.Vec(len(n.weights))
 	// calculate the gradient of the output
-	d := n.Module.Grad(err, n.Module.Back(n.output))
+	// we are passing the initial input
+	// that is more work, but is more correct in general,
+	// as not all activation functions depend on the output only (?)
+	// otherwise we could use the output, but only if the activation derivative method supports it
+	// TODO ?
+	d := n.Module.Grad(err, n.Module.Back(n.rawOutput))
 	for i, inp := range n.input {
 		// create the error for the previous layer
-		dw[i] = d * n.weights[i]
+		loss[i] = d * n.weights[i]
 		// we are updating the weights while going back as well
-		n.weights[i] = n.weights[i] + n.Module.Get()*d*inp
+		f := n.Module.Get() * d * inp
+		n.weights[i] = n.weights[i] + f
 	}
-	return dw
+	return loss
 }
 
 type NeuronFactory func(p int, meta meta) *Neuron
@@ -56,11 +63,11 @@ var Perceptron = func(module ml.Module, weights math.VectorGenerator) NeuronFact
 		return &Neuron{
 			Module: module,
 			memory: memory{
-				input: math.NewVector(p),
-				delta: math.NewVector(p),
+				input: math.Vec(p),
+				delta: math.Vec(p),
 			},
 			meta:    meta,
-			weights: weights(p),
+			weights: weights(p, meta.index),
 		}
 	}
 }
@@ -73,6 +80,7 @@ type xNeuron struct {
 	backOut chan xVector
 }
 
+// init initialises the neurons to listen for incoming forward and backward directed data from the parent layer
 func (xn *xNeuron) init() *xNeuron {
 	go func(xn *xNeuron) {
 		for {

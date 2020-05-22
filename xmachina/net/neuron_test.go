@@ -47,9 +47,9 @@ func TestNeuron_ZeroErrorBackward(t *testing.T) {
 
 	v := neuron.backward(0)
 
-	assert.Equal(t, xmath.Const(0.0)(2), v)
+	assert.Equal(t, xmath.Const(0.0)(2, 0), v)
 
-	assert.Equal(t, weights(2), neuron.weights)
+	assert.Equal(t, weights(2, 0), neuron.weights)
 
 }
 
@@ -138,7 +138,7 @@ func TestNeuron_BinaryClassification(t *testing.T) {
 	inp2 := []float64{1, 0}
 	exp2 := 0.0
 
-	iterations := 100
+	iterations := 1000
 
 	var r1 float64
 	var r2 float64
@@ -176,8 +176,7 @@ func TestNeuron_SigmoidActivationLimit(t *testing.T) {
 
 	module := ml.New()
 
-	weights := xmath.Const(-0.5)
-	neuron := Perceptron(module, weights)(2, meta{})
+	neuron := Perceptron(module, xmath.Const(-0.5))(2, meta{})
 
 	expected := 10.0
 	var r float64

@@ -23,10 +23,11 @@ func main() {
 	start := time.Now().Unix()
 
 	// build the network
-	network := net.XNew(784, 10).Debug(true).
-		Add(784, net.Perceptron(ml.New().Rate(0.5), math.Rand)).  // hidden layer
-		Add(200, net.Perceptron(ml.New().Rate(0.01), math.Rand)). // hidden layer
-		Add(10, net.Perceptron(ml.New().Rate(1), math.Rand))      // output layer
+	network := net.XNew(784, 10).
+		Add(784, net.Perceptron(ml.New().Rate(0.5), math.Rand())).  // hidden layer
+		Add(200, net.Perceptron(ml.New().Rate(0.01), math.Rand())). // hidden layer
+		Add(10, net.Perceptron(ml.New().Rate(1), math.Rand())).
+		AddSoftMax() // output layer
 
 	data := make(xmachina.Data)
 
@@ -84,7 +85,7 @@ func main() {
 
 func parseMnistLine(record []string) (inp, out math.Vector) {
 
-	inp = math.NewVector(784)
+	inp = math.Vec(784)
 	for i := range inp {
 		x, _ := strconv.ParseFloat(record[i+1], 64)
 		inp[i] = (x / 255.0 * 0.99) + 0.01

@@ -16,8 +16,8 @@ func ReadFile(filename string, lines int, iterations int, parse func(record []st
 
 	// TODO: fix this ugliness with the line parameter
 	if lines > 0 {
-		inputSet = math.NewMatrix(lines)
-		outputSet = math.NewMatrix(lines)
+		inputSet = math.Mat(lines)
+		outputSet = math.Mat(lines)
 	}
 
 	for i := 0; i < iterations; i++ {

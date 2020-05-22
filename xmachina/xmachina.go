@@ -82,7 +82,7 @@ func TrainInMem(config InMemTraining, network net.NN, inputSet xmath.Matrix, out
 	loss := math.MaxFloat64
 
 	for epoch := 0; epoch < config.epochs; epoch++ {
-		sumErr := xmath.NewVector(len(outputSet[0]))
+		sumErr := xmath.Vec(len(outputSet[0]))
 		var finalWeights xmath.Cube
 		for i, input := range inputSet {
 			err, weights := network.Train(input, outputSet[i])
@@ -112,7 +112,7 @@ func TrainInStream(ctx context.Context, config InStreamTraining, network net.NN,
 
 	config.init()
 
-	sumErr := xmath.NewVector(config.outputSize)
+	sumErr := xmath.Vec(config.outputSize)
 	e := 0
 	score := 0.0
 	i := 0
@@ -152,7 +152,7 @@ func TrainInStream(ctx context.Context, config InStreamTraining, network net.NN,
 			ack <- err
 
 			// reset the error
-			sumErr = xmath.NewVector(config.outputSize)
+			sumErr = xmath.Vec(config.outputSize)
 			i = 0
 		}
 	}

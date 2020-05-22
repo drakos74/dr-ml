@@ -6,6 +6,7 @@ import (
 
 type NN interface {
 	Train(input xmath.Vector, output xmath.Vector) (err xmath.Vector, weights xmath.Cube)
+	Predict(input xmath.Vector) xmath.Vector
 }
 
 type info struct {
@@ -18,6 +19,14 @@ type info struct {
 type config struct {
 	trace bool
 	debug bool
+}
+
+func (cfg *config) Debug() {
+	cfg.debug = true
+}
+
+func (cfg *config) Trace() {
+	cfg.trace = true
 }
 
 type Network struct {
@@ -37,11 +46,6 @@ func New(inputSize, outputSize int) *Network {
 	}
 }
 
-func (n *Network) Debug(debug bool) *Network {
-	n.debug = debug
-	return n
-}
-
 func (n *Network) Add(s int, factory NeuronFactory) *Network {
 
 	ps := n.inputSize
@@ -52,36 +56,65 @@ func (n *Network) Add(s int, factory NeuronFactory) *Network {
 		ps = n.layers[ls-1].Size()
 	}
 
-	n.layers = append(n.layers, NewLayer(ps, s, factory, len(n.layers)))
+	n.layers = append(n.layers, NewFFLayer(ps, s, factory, len(n.layers)))
+	return n
+}
+
+func (n *Network) AddSoftMax() *Network {
+
+	ps := n.inputSize
+
+	ls := len(n.layers)
+	if ls > 0 {
+		// check previous layer size
+		ps = n.layers[ls-1].Size()
+	}
+
+	n.layers = append(n.layers, NewSMLayer(ps, len(n.layers)))
 	return n
 }
 
 func (n *Network) forward(input xmath.Vector) xmath.Vector {
-	output := xmath.NewVector(len(input)).From(input)
+	output := xmath.Vec(len(input)).With(input...)
 	for _, l := range n.layers {
-		output = l.forward(output)
+		output = l.Forward(output)
 	}
 	return output
 }
 
-func (n *Network) backward(loss xmath.Vector) {
-	layer := n.layers[len(n.layers)-1]
-	// for the last layer we rebuild the error matrix
-	err := xmath.NewMatrix(layer.Size()).From(loss)
-	// for the rest of the layers we just iterate in revere order
+func (n *Network) backward(err xmath.Vector) {
+	// we go through the layers in reverse order
 	for i := len(n.layers) - 1; i >= 0; i-- {
-		err = n.layers[i].backward(err)
+		err = n.layers[i].Backward(err)
 	}
 
 }
 
-func (n *Network) Train(input xmath.Vector, output xmath.Vector) (err xmath.Vector, weights xmath.Cube) {
+func (n *Network) Train(input xmath.Vector, expected xmath.Vector) (err xmath.Vector, weights xmath.Cube) {
 
 	out := n.forward(input)
-	err = output.Diff(out)
-	n.backward(err)
+
+	diff := expected.Diff(out)
+
+	// quadratic error
+	err = diff.Pow(2).Mult(0.5)
+	// cross entropy
+	//err = expected.Dop(func(x, y float64) float64 {
+	//	return -1 * x * math.Log(y)
+	//}, out)
+
+	n.backward(diff)
 
 	n.iterations++
+
+	if n.trace {
+		weights = xmath.Cub(len(n.layers))
+		for i := 0; i < len(n.layers); i++ {
+			layer := n.layers[i]
+			m := layer.Weights()
+			weights[i] = m
+		}
+	}
 
 	return err, weights
 
@@ -92,25 +125,16 @@ func (n *Network) Predict(input xmath.Vector) xmath.Vector {
 }
 
 type XNetwork struct {
-	info
-	config
-	layers []xLayer
+	*Network
 }
 
 func XNew(inputSize, outputSize int) *XNetwork {
 
-	return &XNetwork{
-		info: info{
-			inputSize:  inputSize,
-			outputSize: outputSize,
-		},
-		layers: make([]xLayer, 0),
+	network := XNetwork{
+		Network: New(inputSize, outputSize),
 	}
-}
+	return &network
 
-func (xn *XNetwork) Debug(debug bool) *XNetwork {
-	xn.debug = debug
-	return xn
 }
 
 func (xn *XNetwork) Add(s int, factory NeuronFactory) *XNetwork {
@@ -125,39 +149,4 @@ func (xn *XNetwork) Add(s int, factory NeuronFactory) *XNetwork {
 
 	xn.layers = append(xn.layers, newXLayer(ps, s, factory, len(xn.layers)))
 	return xn
-}
-
-func (xn *XNetwork) forward(input xmath.Vector) xmath.Vector {
-	output := xmath.NewVector(len(input)).From(input)
-	for _, l := range xn.layers {
-		output = l.forward(output)
-	}
-	return output
-}
-
-func (xn *XNetwork) backward(loss xmath.Vector) {
-	layer := xn.layers[len(xn.layers)-1]
-	// for the last layer we rebuild the error matrix
-	err := xmath.NewMatrix(layer.Size()).From(loss)
-	// for the rest of the layers we just iterate in revere order
-	for i := len(xn.layers) - 1; i >= 0; i-- {
-		err = xn.layers[i].backward(err)
-	}
-
-}
-
-func (xn *XNetwork) Train(input xmath.Vector, output xmath.Vector) (err xmath.Vector, weights xmath.Cube) {
-
-	out := xn.forward(input)
-	err = output.Diff(out)
-	xn.backward(err)
-
-	xn.iterations++
-
-	return err, weights
-
-}
-
-func (xn *XNetwork) Predict(input xmath.Vector) xmath.Vector {
-	return xn.forward(input)
 }

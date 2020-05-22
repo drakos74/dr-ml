@@ -14,11 +14,11 @@ import (
 )
 
 // This is a repetition of TestNeuron_BinaryClassification in neuron_test.go
-func TestLayer_Propagation(t *testing.T) {
+func TestLayer_LeaningProcess(t *testing.T) {
 
-	module := ml.New().Rate(10)
+	module := ml.New().Rate(1)
 
-	layer := NewLayer(2, 2, Perceptron(module, xmath.Const(0.5)), 0)
+	layer := NewFFLayer(2, 2, Perceptron(module, xmath.Const(0.5)), 0)
 
 	inp1 := []float64{0, 1}
 	exp1 := []float64{1, 0}
@@ -26,25 +26,26 @@ func TestLayer_Propagation(t *testing.T) {
 	inp2 := []float64{1, 0}
 	exp2 := []float64{0, 1}
 
-	iterations := 1000
+	iterations := 10000
 
-	v1 := xmath.NewVector(2)
-	v2 := xmath.NewVector(2)
+	v1 := xmath.Vec(2)
+	v2 := xmath.Vec(2)
 
 	err := math.MaxFloat64
 	var finishedAt int
 	for i := 0; i < iterations; i++ {
-		v1 = layer.forward(inp1)
-		err1 := xmath.NewVector(2).From(exp1).Diff(v1)
-		layer.backward(xmath.NewMatrix(2).From(err1))
 
-		v2 = layer.forward(inp2)
-		err2 := xmath.NewVector(2).From(exp2).Diff(v2)
-		layer.backward(xmath.NewMatrix(2).From(err2))
+		v1 = layer.Forward(inp1)
+		err1 := xmath.Vec(2).With(exp1...).Diff(v1)
+		layer.Backward(err1)
+
+		v2 = layer.Forward(inp2)
+		err2 := xmath.Vec(2).With(exp2...).Diff(v2)
+		layer.Backward(err2)
 
 		loss := err1.Add(err2).Norm()
 
-		assert.True(t, loss < err)
+		assert.True(t, loss <= err || math.Abs(loss-err) < 0.00001, fmt.Sprintf("loss = %v > err = %v", loss, err))
 		err = loss
 		if err < 0.0001 && finishedAt == 0 {
 			finishedAt = i
@@ -54,7 +55,7 @@ func TestLayer_Propagation(t *testing.T) {
 
 	for i, r := range exp1 {
 		v := v1[i]
-		assert.True(t, math.Abs(v-r) < 0.01)
+		assert.True(t, math.Abs(v-r) < 0.01, fmt.Sprintf("v = %v vs r = %v", v, r))
 	}
 
 	for i, r := range exp2 {
@@ -67,14 +68,14 @@ func TestLayer_Propagation(t *testing.T) {
 }
 
 // Note : this test might take a while ...
-func TestLayer_RandomPropagationScenarios(t *testing.T) {
+func TestLayer_RandomLearningProcessScenarios(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 
 		rand.Seed(time.Now().UnixNano())
 		// generate inputs
-		inp := xmath.NewMatrix(2).With(xmath.Rand(2), xmath.Rand(2))
-		exp := xmath.NewMatrix(2).With(xmath.Rand(2), xmath.Rand(2))
+		inp := xmath.Mat(2).With(xmath.Rand()(2, 0), xmath.Rand()(2, 1))
+		exp := xmath.Mat(2).With(xmath.Rand()(2, 0), xmath.Rand()(2, 0))
 
 		assertTraining(t, inp, exp)
 
@@ -87,21 +88,21 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 	log.Println(fmt.Sprintf("inp = %v", inp))
 	log.Println(fmt.Sprintf("exp = %v", exp))
 
-	layer := NewLayer(2, 2, Perceptron(ml.New(), xmath.Const(0.5)), 0)
+	layer := NewFFLayer(2, 2, Perceptron(ml.New(), xmath.Const(0.5)), 0)
 
-	v := xmath.NewMatrix(len(inp))
+	v := xmath.Mat(len(inp))
 
-	errThreshold := 0.001
+	errThreshold := 0.0001
 
 	sumErr := 0.0
 	var finishedAt int
 	i := 0
 	for {
-		loss := xmath.NewVector(len(v))
+		loss := xmath.Vec(len(v))
 		for j := 0; j < len(v); j++ {
-			v[j] = layer.forward(inp[j])
-			err := xmath.NewVector(2).From(exp[j]).Diff(v[j])
-			layer.backward(xmath.NewMatrix(2).From(err))
+			v[j] = layer.Forward(inp[j])
+			err := xmath.Vec(2).With(exp[j]...).Diff(v[j])
+			layer.Backward(err)
 			loss = loss.Add(err)
 		}
 
@@ -132,4 +133,31 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 	}
 
 	assert.True(t, finishedAt > 0)
+}
+
+// TODO : test propagation with '0' learning rate
+
+// TODO : test softmax layer
+func TestSoftMaxLayer(t *testing.T) {
+
+	l := NewSMLayer(10, 0)
+
+	v := xmath.Vec(10).With(0.1, 2, 3, 5, 1, 7, 4, 4, 0.5, 7)
+
+	println(fmt.Sprintf("v = %v", v))
+
+	o := l.Forward(v)
+
+	assert.Equal(t, 1.0, math.Round(o.Sum()))
+
+	println(fmt.Sprintf("o = %v", o))
+
+	e := xmath.Const(0.5)(10, 0)
+
+	diff := e.Diff(o)
+	println(fmt.Sprintf("diff = %v", diff.Prod(diff.Op(math.Log).Mult(-1))))
+	er := l.Backward(diff)
+
+	println(fmt.Sprintf("er = %v", er))
+
 }

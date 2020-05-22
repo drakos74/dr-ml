@@ -1,15 +1,11 @@
 package xmachina
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/csv"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"log"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -25,11 +21,11 @@ import (
 func TestNetwork_BinaryClassificationSimple(t *testing.T) {
 
 	// build the network
-	network := net.New(2, 1).Debug(true).
-		Add(2, net.Perceptron(ml.New(), math.Rand)) // output layer
+	network := net.New(2, 1).
+		Add(2, net.Perceptron(ml.New(), math.Rand())) // output layer
 
-	inputSet := math.NewMatrix(2).With([]float64{1, 0}, []float64{0, 1})
-	outputSet := math.NewMatrix(2).With([]float64{0, 1}, []float64{1, 0})
+	inputSet := math.Mat(2).With([]float64{1, 0}, []float64{0, 1})
+	outputSet := math.Mat(2).With([]float64{0, 1}, []float64{1, 0})
 
 	TrainInMem(Training(0.001, 10000), network, inputSet, outputSet)
 
@@ -46,9 +42,9 @@ func TestNetwork_BinaryClassificationSimple(t *testing.T) {
 func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 
 	// build the network
-	network := net.New(2, 1).Debug(true).
-		Add(2, net.Perceptron(ml.New(), math.Rand)). // hidden layer
-		Add(1, net.Perceptron(ml.New(), math.Rand))  // output layer
+	network := net.New(2, 1).
+		Add(2, net.Perceptron(ml.New(), math.Rand())). // hidden layer
+		Add(1, net.Perceptron(ml.New(), math.Rand()))  // output layer
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
@@ -59,12 +55,12 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
 
-	inputSet := math.NewMatrix(len(records))
-	outputSet := math.NewMatrix(len(records))
+	inputSet := math.Mat(len(records))
+	outputSet := math.Mat(len(records))
 
 	for i, record := range records {
-		inp := math.NewVector(len(record) - 1)
-		out := math.NewVector(len(record) - 2)
+		inp := math.Vec(len(record) - 1)
+		out := math.Vec(len(record) - 2)
 
 		for j, value := range record {
 			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
@@ -81,7 +77,7 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 		outputSet[i] = out
 	}
 
-	TrainInMem(Training(0.001, 10000), network, inputSet, outputSet)
+	TrainInMem(Training(0.0001, 10000), network, inputSet, outputSet)
 
 	// check trained network performance
 
@@ -98,9 +94,9 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 	start := time.Now().UnixNano()
 
 	// build the network
-	network := net.New(2, 1).Debug(true).
-		Add(2, net.Perceptron(ml.New(), math.Rand)). // hidden layer
-		Add(1, net.Perceptron(ml.New(), math.Rand))  // output layer
+	network := net.New(2, 1).
+		Add(2, net.Perceptron(ml.New(), math.Rand())). // hidden layer
+		Add(1, net.Perceptron(ml.New(), math.Rand()))  // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -137,9 +133,9 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 
 	start := time.Now().UnixNano()
 	// build the network
-	network := net.XNew(2, 1).Debug(true).
-		Add(2, net.Perceptron(ml.New(), math.Rand)). // hidden layer
-		Add(1, net.Perceptron(ml.New(), math.Rand))  // output layer
+	network := net.XNew(2, 1).
+		Add(2, net.Perceptron(ml.New(), math.Rand())). // hidden layer
+		Add(1, net.Perceptron(ml.New(), math.Rand()))  // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -172,9 +168,70 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 
 }
 
+func testNetwork_BinaryClassificationSoftmaxInMem(t *testing.T) {
+
+	// build the network
+	network := net.New(2, 2).
+		Add(2, net.Perceptron(ml.New().Rate(0.05), math.Rand())).
+		Add(2, net.Perceptron(ml.New().Rate(0.05), math.Rand())).
+		AddSoftMax() // output layer
+
+	// parse the input data
+	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
+	assert.NoError(t, err)
+
+	reader := csv.NewReader(bytes.NewBuffer(b))
+
+	records, err := reader.ReadAll()
+	assert.NoError(t, err)
+
+	inputSet := math.Mat(len(records))
+	outputSet := math.Mat(len(records))
+
+	for i, record := range records {
+		inp := math.Vec(2)
+		out := math.Vec(2)
+
+		for j, value := range record {
+			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+			if err != nil {
+				panic(fmt.Sprintf("cannot Train with non-numeric value %v: %v", value, err))
+			}
+			if j < 2 {
+				inp[j] = f
+			} else {
+				if f == 0 {
+					out[0] = 0.1
+					out[1] = 0.9
+				} else {
+					out[0] = 0.9
+					out[1] = 0.1
+				}
+
+			}
+		}
+		inputSet[i] = inp
+		outputSet[i] = out
+	}
+
+	println(fmt.Sprintf("outputSet = %v", outputSet))
+	println(fmt.Sprintf("inputSet = %v", inputSet))
+
+	TrainInMem(Training(0.0001, 10000), network, inputSet, outputSet)
+
+	// check trained network performance
+
+	for i, input := range inputSet {
+		o := network.Predict(input)
+		r := outputSet[i]
+		assert.Equal(t, r, o)
+	}
+
+}
+
 func parseBinClassLine(record []string) (inp, out math.Vector) {
-	inp = math.NewVector(len(record) - 1)
-	out = math.NewVector(len(record) - 2)
+	inp = math.Vec(len(record) - 1)
+	out = math.Vec(len(record) - 2)
 
 	for j, value := range record {
 		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
@@ -187,86 +244,5 @@ func parseBinClassLine(record []string) (inp, out math.Vector) {
 			out[j-2] = f
 		}
 	}
-	return inp, out
-}
-
-func TestNetwork_Mnist(t *testing.T) {
-
-	start := time.Now().Unix()
-
-	// build the network
-	network := net.XNew(784, 10).Debug(true).
-		Add(784, net.Perceptron(ml.New().Rate(2), math.Rand)). // hidden layer
-		Add(200, net.Perceptron(ml.New().Rate(2), math.Rand)). // hidden layer
-		Add(10, net.Perceptron(ml.New().Rate(2), math.Rand))   // output layer
-
-	data := make(Data)
-
-	config := StreamingTraining(Training(0.1, 1), 10, 1000)
-
-	ack := make(Ack)
-
-	ctx, cnl := context.WithCancel(context.Background())
-	go TrainInStream(ctx, config, network, data, ack)
-
-	_, _, err := ReadFile("test/testdata/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
-
-	if err != nil {
-		t.Fail()
-	}
-
-	cnl()
-
-	// score the network
-
-	checkFile, _ := os.Open("test/testdata/mnist/mnist_test.csv")
-	defer checkFile.Close()
-
-	score := 0
-	rTest := csv.NewReader(bufio.NewReader(checkFile))
-	total := 0
-	for {
-		record, err := rTest.Read()
-		if err == io.EOF {
-			break
-		}
-		total++
-		inputs, _ := parseMnistLine(record)
-		outputs := network.Predict(inputs)
-		best := 0
-		highest := 0.0
-		for i := 0; i < len(outputs); i++ {
-			if outputs[i] > highest {
-				best = i
-				highest = outputs[i]
-			}
-		}
-		target, _ := strconv.Atoi(record[0])
-		if best == target {
-			score++
-		}
-	}
-
-	log.Println(fmt.Sprintf("score = %v", float64(score)/float64(total)))
-
-	duration := time.Now().Unix() - start
-	println(fmt.Sprintf("duration = %v", duration))
-}
-
-func parseMnistLine(record []string) (inp, out math.Vector) {
-
-	inp = math.NewVector(784)
-	for i := range inp {
-		x, _ := strconv.ParseFloat(record[i+1], 64)
-		inp[i] = (x / 255.0 * 0.99) + 0.01
-	}
-
-	out = make([]float64, 10)
-	for i := range out {
-		out[i] = 0.1
-	}
-	x, _ := strconv.Atoi(record[0])
-	out[x] = 0.9
-
 	return inp, out
 }
