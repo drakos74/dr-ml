@@ -163,6 +163,7 @@ func (xl *xLayer) Weights() xmath.Matrix {
 	return m
 }
 
+// TODO :fix the SM layer
 type SMLayer struct {
 	ml.SoftMax
 	size int
