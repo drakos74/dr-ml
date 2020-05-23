@@ -6,7 +6,7 @@ import (
 )
 
 type Layer interface {
-	// Forward will take the input from the previous layer and generate an input for the next layer
+	// F will take the input from the previous layer and generate an input for the next layer
 	Forward(v xmath.Vector) xmath.Vector
 	// Backward will take the loss from next layer and generate a loss for the previous layer
 	Backward(dv xmath.Vector) xmath.Vector
@@ -43,20 +43,25 @@ func (l *FFLayer) Forward(v xmath.Vector) xmath.Vector {
 	out := xmath.Vec(len(l.neurons))
 	// each neuron will receive the same vector input from the previous layer outputs
 	// it will apply it's weights accordingly
+	//aggr := xmath.NewAggregate()
+
 	for i, n := range l.neurons {
 		out[i] = n.forward(v)
+		//aggr.Add(xmath.NewBucketFromVector(n.weights))
 	}
+	//println(fmt.Sprintf("aggr = %v", aggr))
 	return out
 }
 
 // backward receives all the errors from the following layer
 // it returns the full matrix of partial errors for the previous layer
 func (l *FFLayer) Backward(err xmath.Vector) xmath.Vector {
-	// we are building the error output for the previous layer
+	// we are preparing the error output for the previous layer
 	dn := xmath.Mat(len(l.neurons))
 	for i, n := range l.neurons {
 		dn[i] = n.backward(err[i])
 	}
+	// we need the transpose in order to produce a vector corresponding to the neurons of the previous layer
 	return dn.T().Sum()
 }
 
@@ -163,7 +168,6 @@ func (xl *xLayer) Weights() xmath.Matrix {
 	return m
 }
 
-// TODO :fix the SM layer
 type SMLayer struct {
 	ml.SoftMax
 	size int
@@ -182,23 +186,16 @@ func (sm *SMLayer) Size() int {
 }
 
 func (sm *SMLayer) Forward(v xmath.Vector) xmath.Vector {
-	// we are iterating several times over all entries
-	// but this layer should be used only for low number of input vector lengths
-	max := sm.Max(v)
-	sum := sm.ExpSum(v, max)
-	for i, x := range v {
-		sm.out[i] = sm.Exp(x, max) / sum
-	}
+	sm.out = sm.F(v)
 	return sm.out
 }
 
 func (sm *SMLayer) Backward(err xmath.Vector) xmath.Vector {
-	// we shall use cross-entropy for the softmax loss to be propagated back to the rest of the layers
-	return sm.Back(sm.out).T().Prod(err)
+	return sm.D(sm.out).Prod(err)
 }
 
 func (sm *SMLayer) Weights() xmath.Matrix {
 	m := xmath.Mat(sm.Size())
-	// TODO : put the correct weights
+	// there are no weights the way we approached this
 	return m
 }

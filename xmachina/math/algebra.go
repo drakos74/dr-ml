@@ -7,6 +7,10 @@ import (
 // Op is a general mathematical operation from one number to another
 type Op func(x float64) float64
 
+var Unit Op = func(x float64) float64 {
+	return x
+}
+
 // Dop is a general mathematical operation from 2 numbers to another
 type Dop func(x, y float64) float64
 

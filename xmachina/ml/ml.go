@@ -1,5 +1,10 @@
 package ml
 
+import (
+	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
+	"math"
+)
+
 type Module interface {
 	Activation
 	Learning
@@ -12,18 +17,19 @@ type LearningModule struct {
 	Descent
 }
 
-func New() *LearningModule {
+func Model() *LearningModule {
 	return &LearningModule{
 		Activation: Sigmoid,
 		Learning: ConstantRate{
-			rate: 1,
+			wrate: 1,
+			brate: 0,
 		},
 		Descent: GradientDescent{},
 	}
 }
 
-func (ml *LearningModule) Rate(rate float64) *LearningModule {
-	ml.Learning = ConstantRate{rate: rate}
+func (ml *LearningModule) Rate(wrate, brate float64) *LearningModule {
+	ml.Learning = ConstantRate{wrate: wrate, brate: brate}
 	return ml
 }
 
@@ -46,4 +52,20 @@ var NoML = LearningModule{
 	Activation: Void{},
 	Learning:   Zero{},
 	Descent:    Zero{},
+}
+
+type Loss func(expected, output xmath.Vector) xmath.Vector
+
+var Diff Loss = func(expected, output xmath.Vector) xmath.Vector {
+	return expected.Diff(output)
+}
+
+var Pow Loss = func(expected, output xmath.Vector) xmath.Vector {
+	return expected.Diff(output).Pow(2).Mult(0.5)
+}
+
+var CrossEntropy Loss = func(expected, output xmath.Vector) xmath.Vector {
+	return expected.Dop(func(x, y float64) float64 {
+		return -1 * x * math.Log(y)
+	}, output)
 }

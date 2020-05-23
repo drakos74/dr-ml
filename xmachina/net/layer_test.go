@@ -16,7 +16,7 @@ import (
 // This is a repetition of TestNeuron_BinaryClassification in neuron_test.go
 func TestLayer_LeaningProcess(t *testing.T) {
 
-	module := ml.New().Rate(1)
+	module := ml.Model().Rate(1, 0.05)
 
 	layer := NewFFLayer(2, 2, Perceptron(module, xmath.Const(0.5)), 0)
 
@@ -74,8 +74,8 @@ func TestLayer_RandomLearningProcessScenarios(t *testing.T) {
 
 		rand.Seed(time.Now().UnixNano())
 		// generate inputs
-		inp := xmath.Mat(2).With(xmath.Rand()(2, 0), xmath.Rand()(2, 1))
-		exp := xmath.Mat(2).With(xmath.Rand()(2, 0), xmath.Rand()(2, 0))
+		inp := xmath.Mat(2).With(xmath.Rand(0, 1, xmath.Unit)(2, 0), xmath.Rand(0, 1, xmath.Unit)(2, 1))
+		exp := xmath.Mat(2).With(xmath.Rand(0, 1, xmath.Unit)(2, 0), xmath.Rand(0, 1, xmath.Unit)(2, 0))
 
 		assertTraining(t, inp, exp)
 
@@ -88,11 +88,11 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 	log.Println(fmt.Sprintf("inp = %v", inp))
 	log.Println(fmt.Sprintf("exp = %v", exp))
 
-	layer := NewFFLayer(2, 2, Perceptron(ml.New(), xmath.Const(0.5)), 0)
+	layer := NewFFLayer(2, 2, Perceptron(ml.Model(), xmath.Const(0.5)), 0)
 
 	v := xmath.Mat(len(inp))
 
-	errThreshold := 0.0001
+	errThreshold := 0.00001
 
 	sumErr := 0.0
 	var finishedAt int
@@ -135,7 +135,33 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 	assert.True(t, finishedAt > 0)
 }
 
-// TODO : test propagation with '0' learning rate
+func TestFFLayer_WithNoLearning(t *testing.T) {
+
+	layer := NewFFLayer(2, 2, Perceptron(ml.Model().Rate(0, 0), xmath.Const(0.5)), 0)
+
+	inp := []float64{0.3, 0.7}
+
+	out := xmath.Vec(2).With(1, 0)
+
+	// do one pass to check the output and error
+	output := layer.Forward(inp)
+	diff := out.Diff(output)
+	err := layer.Backward(diff)
+
+	for i := 0; i < 10; i++ {
+		outp := layer.Forward(inp)
+
+		assert.Equal(t, output, outp)
+
+		hErr := layer.Backward(diff)
+
+		assert.Equal(t, err, hErr)
+
+		output = outp
+
+	}
+
+}
 
 // TODO : test softmax layer
 func TestSoftMaxLayer(t *testing.T) {

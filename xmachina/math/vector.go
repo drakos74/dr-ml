@@ -58,7 +58,9 @@ func (v Vector) Add(w Vector) Vector {
 
 // Diff returns the difference of the corresponding elements between the given vectors
 func (v Vector) Diff(w Vector) Vector {
-	return v.Add(w.Mult(-1))
+	return v.Dop(func(x, y float64) float64 {
+		return x - y
+	}, w)
 }
 
 // Pow returns a vector with all the elements to the given power
@@ -128,12 +130,14 @@ var Def = func(m ...Vector) VectorGenerator {
 }
 
 // Rand generates a vector of the given size with random values between 0 and 1
-var Rand = func() VectorGenerator {
+var Rand = func(min, max float64, op Op) VectorGenerator {
+	rand.Seed(time.Now().UnixNano())
 	return func(p, index int) Vector {
-		rand.Seed(time.Now().UnixNano())
+		mmin := min / op(float64(p))
+		mmax := max / op(float64(p))
 		w := Vec(p)
 		for i := 0; i < p; i++ {
-			w[i] = rand.Float64()
+			w[i] = rand.Float64()*(mmax-mmin) + mmin
 		}
 		return w
 	}

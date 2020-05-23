@@ -14,16 +14,16 @@ func TestNetwork_Train_NoActivation(t *testing.T) {
 
 	n := New(2, 1).
 		Add(2,
-			Perceptron(ml.New().
-				Rate(0.05).
+			Perceptron(ml.Model().
+				Rate(0.05, 0.05).
 				WithActivation(ml.Void{}),
 				math.Def(
 					math.Vec(2).With(0.11, 0.21),
 					math.Vec(2).With(0.12, 0.08),
 				))).
 		Add(1,
-			Perceptron(ml.New().
-				Rate(0.05).
+			Perceptron(ml.Model().
+				Rate(0.05, 0.05).
 				WithActivation(ml.Void{}),
 				math.Def(
 					math.Vec(2).With(0.14, 0.15),
@@ -57,16 +57,16 @@ func TestXNetwork_Train_NoActivation(t *testing.T) {
 
 	n := XNew(2, 1).
 		Add(2,
-			Perceptron(ml.New().
-				Rate(0.05).
+			Perceptron(ml.Model().
+				Rate(0.05, 0.05).
 				WithActivation(ml.Void{}),
 				math.Def(
 					math.Vec(2).With(0.11, 0.21),
 					math.Vec(2).With(0.12, 0.08),
 				))).
 		Add(1,
-			Perceptron(ml.New().
-				Rate(0.05).
+			Perceptron(ml.Model().
+				Rate(0.05, 0.05).
 				WithActivation(ml.Void{}),
 				math.Def(
 					math.Vec(2).With(0.14, 0.15),

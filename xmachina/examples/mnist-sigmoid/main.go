@@ -7,27 +7,47 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os"
+	"runtime/pprof"
 	"strconv"
 	"time"
 
 	"github.com/drakos74/go-ex-machina/xmachina"
 
-	"github.com/drakos74/go-ex-machina/xmachina/math"
+	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 )
 
 func main() {
 
-	start := time.Now().Unix()
+	start := time.Now()
+
+	f, err := os.Create("xmachina/examples/mnist-sigmoid/profile")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
 
 	// build the network
+
+	// sigmoid
+	//network := net.XNew(784, 10).
+	//	Add(200, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt))).
+	//	Add(10, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt)))
+	// tanh with softmax
+	//network := net.XNew(784, 10).
+	//	Add(200, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
+	//	Add(10, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
+	//	AddSoftMax()
+	// ReLU
 	network := net.XNew(784, 10).
-		Add(784, net.Perceptron(ml.New().Rate(0.5), math.Rand())).  // hidden layer
-		Add(200, net.Perceptron(ml.New().Rate(0.01), math.Rand())). // hidden layer
-		Add(10, net.Perceptron(ml.New().Rate(1), math.Rand())).
-		AddSoftMax() // output layer
+		Add(200, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.ReLU), xmath.Rand(-1, 1, math.Sqrt))).
+		//note : we sould not use ReLU in the output layer
+		Add(10, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt))).
+		AddSoftMax()
 
 	data := make(xmachina.Data)
 
@@ -38,13 +58,15 @@ func main() {
 	ctx, cnl := context.WithCancel(context.Background())
 	go xmachina.TrainInStream(ctx, config, network, data, ack)
 
-	_, _, err := xmachina.ReadFile("xmachina/examples/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
+	_, _, err = xmachina.ReadFile("xmachina/examples/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
 
 	if err != nil {
 		log.Fatalf("could not read file: %v", err)
 	}
 
 	cnl()
+
+	println(fmt.Sprintf("train duration = %v", time.Since(start)))
 
 	// score the network
 
@@ -78,14 +100,11 @@ func main() {
 
 	log.Println(fmt.Sprintf("score = %v", float64(score)/float64(total)))
 
-	duration := time.Now().Unix() - start
-	println(fmt.Sprintf("duration = %v", duration))
-
 }
 
-func parseMnistLine(record []string) (inp, out math.Vector) {
+func parseMnistLine(record []string) (inp, out xmath.Vector) {
 
-	inp = math.Vec(784)
+	inp = xmath.Vec(784)
 	for i := range inp {
 		x, _ := strconv.ParseFloat(record[i+1], 64)
 		inp[i] = (x / 255.0 * 0.99) + 0.01

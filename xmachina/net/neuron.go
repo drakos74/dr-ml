@@ -29,7 +29,7 @@ func (n *Neuron) forward(v math.Vector) float64 {
 	math.MustHaveSameSize(v, n.input)
 	n.input = v
 	n.rawOutput = v.Dot(n.weights) + n.bias
-	n.output = n.Forward(n.rawOutput)
+	n.output = n.F(n.rawOutput)
 	if n.output >= 1 {
 		// TODO : notify of bad weight distribution (?)
 	}
@@ -39,19 +39,13 @@ func (n *Neuron) forward(v math.Vector) float64 {
 // TODO : backward for bias
 func (n *Neuron) backward(err float64) math.Vector {
 	loss := math.Vec(len(n.weights))
-	// calculate the gradient of the output
-	// we are passing the initial input
-	// that is more work, but is more correct in general,
-	// as not all activation functions depend on the output only (?)
-	// otherwise we could use the output, but only if the activation derivative method supports it
-	// TODO ?
-	d := n.Module.Grad(err, n.Module.Back(n.rawOutput))
+	grad := n.Module.Grad(err, n.Module.D(n.output))
 	for i, inp := range n.input {
 		// create the error for the previous layer
-		loss[i] = d * n.weights[i]
+		loss[i] = grad * n.weights[i]
 		// we are updating the weights while going back as well
-		f := n.Module.Get() * d * inp
-		n.weights[i] = n.weights[i] + f
+		n.weights[i] = n.weights[i] + n.Module.WRate()*grad*inp
+		n.bias += grad * n.Module.BRate()
 	}
 	return loss
 }

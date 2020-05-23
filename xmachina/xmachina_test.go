@@ -22,7 +22,7 @@ func TestNetwork_BinaryClassificationSimple(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 1).
-		Add(2, net.Perceptron(ml.New(), math.Rand())) // output layer
+		Add(2, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit))) // output layer
 
 	inputSet := math.Mat(2).With([]float64{1, 0}, []float64{0, 1})
 	outputSet := math.Mat(2).With([]float64{0, 1}, []float64{1, 0})
@@ -43,8 +43,8 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 1).
-		Add(2, net.Perceptron(ml.New(), math.Rand())). // hidden layer
-		Add(1, net.Perceptron(ml.New(), math.Rand()))  // output layer
+		Add(2, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit))). // hidden layer
+		Add(1, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit)))  // output layer
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
@@ -95,8 +95,8 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 1).
-		Add(2, net.Perceptron(ml.New(), math.Rand())). // hidden layer
-		Add(1, net.Perceptron(ml.New(), math.Rand()))  // output layer
+		Add(2, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit))). // hidden layer
+		Add(1, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit)))  // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -134,8 +134,8 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 	start := time.Now().UnixNano()
 	// build the network
 	network := net.XNew(2, 1).
-		Add(2, net.Perceptron(ml.New(), math.Rand())). // hidden layer
-		Add(1, net.Perceptron(ml.New(), math.Rand()))  // output layer
+		Add(2, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit))). // hidden layer
+		Add(1, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit)))  // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -168,12 +168,12 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 
 }
 
-func testNetwork_BinaryClassificationSoftmaxInMem(t *testing.T) {
+func TestNetwork_BinaryClassificationSoftmaxInMem(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 2).
-		Add(2, net.Perceptron(ml.New().Rate(0.05), math.Rand())).
-		Add(2, net.Perceptron(ml.New().Rate(0.05), math.Rand())).
+		Add(2, net.Perceptron(ml.Model().Rate(0.05, 0.05), math.Rand(0, 1, math.Unit))).
+		Add(2, net.Perceptron(ml.Model().Rate(0.05, 0.05), math.Rand(0, 1, math.Unit))).
 		AddSoftMax() // output layer
 
 	// parse the input data

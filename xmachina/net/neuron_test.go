@@ -13,20 +13,20 @@ import (
 
 func TestNeuron_SimpleForward(t *testing.T) {
 
-	module := ml.New()
+	module := ml.Model()
 
 	neuron := Perceptron(module, xmath.Const(0.5))(2, meta{})
 
 	result := neuron.forward([]float64{1, 0})
 
 	// result should be the sigmoid of 0.5
-	assert.Equal(t, ml.Sigmoid.Forward(0.5), result)
+	assert.Equal(t, ml.Sigmoid.F(0.5), result)
 
 }
 
 func TestNeuron_SimpleForward_NegWeights(t *testing.T) {
 
-	module := ml.New()
+	module := ml.Model()
 
 	neuron := Perceptron(module, xmath.Const(-0.5))(2, meta{})
 
@@ -39,7 +39,7 @@ func TestNeuron_SimpleForward_NegWeights(t *testing.T) {
 
 func TestNeuron_ZeroErrorBackward(t *testing.T) {
 
-	module := ml.New()
+	module := ml.Model()
 
 	weights := xmath.Const(0.5)
 	neuron := Perceptron(module, weights)(2, meta{})
@@ -55,7 +55,7 @@ func TestNeuron_ZeroErrorBackward(t *testing.T) {
 
 func TestNeuron_GreaterErrorBackward(t *testing.T) {
 
-	module := ml.New()
+	module := ml.Model()
 
 	weights := xmath.Const(0.5)
 	neuron := Perceptron(module, weights)(2, meta{})
@@ -79,7 +79,7 @@ func TestNeuron_GreaterErrorBackward(t *testing.T) {
 
 func TestNeuron_GreaterErrorBackward_NegWeights(t *testing.T) {
 
-	module := ml.New()
+	module := ml.Model()
 
 	weights := xmath.Const(-0.5)
 	neuron := Perceptron(module, weights)(2, meta{})
@@ -103,7 +103,7 @@ func TestNeuron_GreaterErrorBackward_NegWeights(t *testing.T) {
 
 func TestNeuron_SmallerErrorBackward(t *testing.T) {
 
-	module := ml.New().Rate(10)
+	module := ml.Model().Rate(10, 0.05)
 
 	weights := xmath.Const(0.5)
 	neuron := Perceptron(module, weights)(2, meta{})
@@ -127,7 +127,7 @@ func TestNeuron_SmallerErrorBackward(t *testing.T) {
 
 func TestNeuron_BinaryClassification(t *testing.T) {
 
-	module := ml.New()
+	module := ml.Model()
 
 	weights := xmath.Const(0.5)
 	neuron := Perceptron(module, weights)(2, meta{})
@@ -174,7 +174,7 @@ func TestNeuron_BinaryClassification(t *testing.T) {
 
 func TestNeuron_SigmoidActivationLimit(t *testing.T) {
 
-	module := ml.New()
+	module := ml.Model()
 
 	neuron := Perceptron(module, xmath.Const(-0.5))(2, meta{})
 

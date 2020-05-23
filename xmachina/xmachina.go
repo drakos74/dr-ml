@@ -128,10 +128,10 @@ func TrainInStream(ctx context.Context, config InStreamTraining, network net.NN,
 		case pair := <-data:
 			i++
 			err, weights := network.Train(pair.input, pair.output)
-			sumErr = sumErr.Add(err)
+			sumErr = sumErr.Add(err.Op(math.Abs))
 			finalWeights = weights
 			if config.debug && i%config.inputCountInterval == 0 {
-				log.Println(fmt.Sprintf("e = %v , i = %v", e, i))
+				log.Println(fmt.Sprintf("e = %v , i = %v , err = %v", e, i, sumErr.Norm()))
 			}
 		case <-config.Epoch:
 			e++

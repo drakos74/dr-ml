@@ -2,6 +2,7 @@ package net
 
 import (
 	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
+	"github.com/drakos74/go-ex-machina/xmachina/ml"
 )
 
 type NN interface {
@@ -32,6 +33,7 @@ func (cfg *config) Trace() {
 type Network struct {
 	info
 	config
+	loss   ml.Loss
 	layers []Layer
 }
 
@@ -43,7 +45,13 @@ func New(inputSize, outputSize int) *Network {
 			outputSize: outputSize,
 		},
 		layers: make([]Layer, 0),
+		loss:   ml.Diff,
 	}
+}
+
+func (n *Network) Loss(loss ml.Loss) *Network {
+	n.loss = loss
+	return n
 }
 
 func (n *Network) Add(s int, factory NeuronFactory) *Network {
@@ -76,6 +84,7 @@ func (n *Network) AddSoftMax() *Network {
 
 func (n *Network) forward(input xmath.Vector) xmath.Vector {
 	output := xmath.Vec(len(input)).With(input...)
+	//println(fmt.Sprintf("n.iter = %v", n.iterations))
 	for _, l := range n.layers {
 		output = l.Forward(output)
 	}
@@ -97,7 +106,7 @@ func (n *Network) Train(input xmath.Vector, expected xmath.Vector) (err xmath.Ve
 	diff := expected.Diff(out)
 
 	// quadratic error
-	err = diff.Pow(2).Mult(0.5)
+	err = n.loss(expected, out)
 	// cross entropy
 	//err = expected.Dop(func(x, y float64) float64 {
 	//	return -1 * x * math.Log(y)
