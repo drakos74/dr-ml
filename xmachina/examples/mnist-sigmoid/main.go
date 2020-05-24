@@ -46,7 +46,7 @@ func main() {
 	network := net.XNew(784, 10).
 		Add(200, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.ReLU), xmath.Rand(-1, 1, math.Sqrt))).
 		//note : we sould not use ReLU in the output layer
-		Add(10, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt))).
+		Add(10, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
 		AddSoftMax()
 
 	data := make(xmachina.Data)
