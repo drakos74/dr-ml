@@ -9,7 +9,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"runtime/pprof"
 	"strconv"
 	"time"
 
@@ -24,12 +23,13 @@ func main() {
 
 	start := time.Now()
 
-	f, err := os.Create("xmachina/examples/mnist-sigmoid/profile")
-	if err != nil {
-		log.Fatal(err)
-	}
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
+	// optional profiling block
+	//f, err := os.Create("examples/mnist-sigmoid/profile")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//pprof.StartCPUProfile(f)
+	//defer pprof.StopCPUProfile()
 
 	// build the network
 
@@ -58,7 +58,7 @@ func main() {
 	ctx, cnl := context.WithCancel(context.Background())
 	go xmachina.TrainInStream(ctx, config, network, data, ack)
 
-	_, _, err = xmachina.ReadFile("xmachina/examples/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
+	_, _, err = xmachina.ReadFile("examples/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
 
 	if err != nil {
 		log.Fatalf("could not read file: %v", err)
@@ -70,7 +70,7 @@ func main() {
 
 	// score the network
 
-	checkFile, _ := os.Open("xmachina/examples/mnist/mnist_test.csv")
+	checkFile, _ := os.Open("examples/mnist/mnist_test.csv")
 	defer checkFile.Close()
 
 	score := 0
