@@ -13,8 +13,8 @@ import (
 
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 
-	"github.com/drakos74/go-ex-machina/xmachina/math"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,10 +22,10 @@ func TestNetwork_BinaryClassificationSimple(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 1).
-		Add(2, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit))) // output layer
+		Add(2, net.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit))) // output layer
 
-	inputSet := math.Mat(2).With([]float64{1, 0}, []float64{0, 1})
-	outputSet := math.Mat(2).With([]float64{0, 1}, []float64{1, 0})
+	inputSet := xmath.Mat(2).With([]float64{1, 0}, []float64{0, 1})
+	outputSet := xmath.Mat(2).With([]float64{0, 1}, []float64{1, 0})
 
 	TrainInMem(Training(0.001, 10000), network, inputSet, outputSet)
 
@@ -43,8 +43,8 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 1).
-		Add(2, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit))). // hidden layer
-		Add(1, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit)))  // output layer
+		Add(2, net.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
+		Add(1, net.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
@@ -55,12 +55,12 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
 
-	inputSet := math.Mat(len(records))
-	outputSet := math.Mat(len(records))
+	inputSet := xmath.Mat(len(records))
+	outputSet := xmath.Mat(len(records))
 
 	for i, record := range records {
-		inp := math.Vec(len(record) - 1)
-		out := math.Vec(len(record) - 2)
+		inp := xmath.Vec(len(record) - 1)
+		out := xmath.Vec(len(record) - 2)
 
 		for j, value := range record {
 			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
@@ -95,8 +95,8 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 1).
-		Add(2, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit))). // hidden layer
-		Add(1, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit)))  // output layer
+		Add(2, net.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
+		Add(1, net.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -134,8 +134,8 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 	start := time.Now().UnixNano()
 	// build the network
 	network := net.XNew(2, 1).
-		Add(2, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit))). // hidden layer
-		Add(1, net.Perceptron(ml.Model(), math.Rand(0, 1, math.Unit)))  // output layer
+		Add(2, net.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
+		Add(1, net.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -172,8 +172,8 @@ func TestNetwork_BinaryClassificationSoftmaxInMem(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 2).
-		Add(2, net.Perceptron(ml.Model().Rate(0.05, 0.05), math.Rand(0, 1, math.Unit))).
-		Add(2, net.Perceptron(ml.Model().Rate(0.05, 0.05), math.Rand(0, 1, math.Unit))).
+		Add(2, net.Perceptron(ml.Model().Rate(0.05, 0.05), xmath.Rand(0, 1, xmath.Unit))).
+		Add(2, net.Perceptron(ml.Model().Rate(0.05, 0.05), xmath.Rand(0, 1, xmath.Unit))).
 		AddSoftMax() // output layer
 
 	// parse the input data
@@ -185,12 +185,12 @@ func TestNetwork_BinaryClassificationSoftmaxInMem(t *testing.T) {
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
 
-	inputSet := math.Mat(len(records))
-	outputSet := math.Mat(len(records))
+	inputSet := xmath.Mat(len(records))
+	outputSet := xmath.Mat(len(records))
 
 	for i, record := range records {
-		inp := math.Vec(2)
-		out := math.Vec(2)
+		inp := xmath.Vec(2)
+		out := xmath.Vec(2)
 
 		for j, value := range record {
 			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
@@ -229,9 +229,9 @@ func TestNetwork_BinaryClassificationSoftmaxInMem(t *testing.T) {
 
 }
 
-func parseBinClassLine(record []string) (inp, out math.Vector) {
-	inp = math.Vec(len(record) - 1)
-	out = math.Vec(len(record) - 2)
+func parseBinClassLine(record []string) (inp, out xmath.Vector) {
+	inp = xmath.Vec(len(record) - 1)
+	out = xmath.Vec(len(record) - 2)
 
 	for j, value := range record {
 		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)

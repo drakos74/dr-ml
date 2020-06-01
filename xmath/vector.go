@@ -1,8 +1,11 @@
-package math
+package xmath
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -26,16 +29,6 @@ func (v Vector) With(w ...float64) Vector {
 	return v
 }
 
-// Prod returns the hadamard product of the given vectors
-func (v Vector) Prod(w Vector) Vector {
-	MustHaveSameSize(v, w)
-	z := Vec(len(v))
-	for i := 0; i < len(v); i++ {
-		z[i] = v[i] * w[i]
-	}
-	return z
-}
-
 // Dot returns the dot product of the 2 vectors
 func (v Vector) Dot(w Vector) float64 {
 	MustHaveSameSize(v, w)
@@ -44,6 +37,27 @@ func (v Vector) Dot(w Vector) float64 {
 		p += v[i] * w[i]
 	}
 	return p
+}
+
+// ProdH returns the product of the given vectors
+func (v Vector) Prod(w Vector) Matrix {
+	z := Mat(len(v)).Of(len(w))
+	for i := 0; i < len(v); i++ {
+		for j := 0; j < len(w); j++ {
+			z[i][j] = v[i] * w[j]
+		}
+	}
+	return z
+}
+
+// ProdH returns the hadamard product of the given vectors
+func (v Vector) ProdH(w Vector) Vector {
+	MustHaveSameSize(v, w)
+	z := Vec(len(v))
+	for i := 0; i < len(v); i++ {
+		z[i] = v[i] * w[i]
+	}
+	return z
 }
 
 // Add adds 2 vectors
@@ -100,6 +114,16 @@ func (v Vector) Norm() float64 {
 	return math.Sqrt(sum)
 }
 
+// Copy copies the vector into a new one with the same values
+// this is for cases where we want to apply mutations, but would like to leave the initial vector intact
+func (v Vector) Copy() Vector {
+	w := Vec(len(v))
+	for i := 0; i < len(v); i++ {
+		w[i] = v[i]
+	}
+	return w
+}
+
 // Op applies to each of the elements a specific function
 func (v Vector) Op(transform Op) Vector {
 	w := Vec(len(v))
@@ -116,6 +140,26 @@ func (v Vector) Dop(transform Dop, w Vector) Vector {
 		z[i] = transform(v[i], w[i])
 	}
 	return z
+}
+
+// String prints the vector in an easily readable form
+func (v Vector) String() string {
+	builder := strings.Builder{}
+	builder.WriteString(fmt.Sprintf("(%d)", len(v)))
+	builder.WriteString("[ ")
+	for i := 0; i < len(v); i++ {
+		ss := ""
+		if v[i] > 0 {
+			ss = " "
+		}
+		builder.WriteString(fmt.Sprintf("%s%s", ss, strconv.FormatFloat(v[i], 'f', pp, 64)))
+		if i < len(v)-1 {
+			// dont add the comma to the last element
+			builder.WriteString(" , ")
+		}
+	}
+	builder.WriteString(" ]")
+	return builder.String()
 }
 
 // VectorGenerator is a type alias defining the creation instructions for vectors

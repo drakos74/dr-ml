@@ -15,15 +15,19 @@ func (z Zero) BRate() float64 {
 	return 0
 }
 
-type ConstantRate struct {
+type LearningRate struct {
 	wrate float64
 	brate float64
 }
 
-func (c ConstantRate) WRate() float64 {
+func Learn(rate float64) Learning {
+	return LearningRate{wrate: rate, brate: rate}
+}
+
+func (c LearningRate) WRate() float64 {
 	return c.wrate
 }
 
-func (c ConstantRate) BRate() float64 {
+func (c LearningRate) BRate() float64 {
 	return c.brate
 }

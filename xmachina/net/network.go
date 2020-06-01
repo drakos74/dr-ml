@@ -1,13 +1,16 @@
 package net
 
 import (
-	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
+	"fmt"
+
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 type NN interface {
 	Train(input xmath.Vector, output xmath.Vector) (err xmath.Vector, weights xmath.Cube)
 	Predict(input xmath.Vector) xmath.Vector
+	Loss(loss ml.Loss)
 }
 
 type info struct {
@@ -49,9 +52,8 @@ func New(inputSize, outputSize int) *Network {
 	}
 }
 
-func (n *Network) Loss(loss ml.Loss) *Network {
+func (n *Network) Loss(loss ml.Loss) {
 	n.loss = loss
-	return n
 }
 
 func (n *Network) Add(s int, factory NeuronFactory) *Network {
@@ -158,4 +160,77 @@ func (xn *XNetwork) Add(s int, factory NeuronFactory) *XNetwork {
 
 	xn.layers = append(xn.layers, newXLayer(ps, s, factory, len(xn.layers)))
 	return xn
+}
+
+type stats struct {
+	iteration int
+	xmath.Bucket
+}
+
+type RNetwork struct {
+	*RNNLayer
+	stats
+	loss         ml.Loss
+	predictInput *xmath.Window
+	trainInput   *xmath.Window
+	trainOutput  *xmath.Window
+	TmpOutput    xmath.Vector
+}
+
+func NewRNetwork(s, n, d int, rate float64) *RNetwork {
+	return &RNetwork{
+		RNNLayer:     NewRNNLayer(s, n, d, ml.Learn(rate), RNeuron(ml.TanH), 0),
+		predictInput: xmath.NewWindow(n),
+		trainInput:   xmath.NewWindow(n),
+		trainOutput:  xmath.NewWindow(n),
+	}
+}
+
+func (net *RNetwork) Loss(loss ml.Loss) {
+	net.loss = loss
+}
+
+func (net *RNetwork) Train(input xmath.Vector, output xmath.Vector) (err xmath.Vector, weights xmath.Cube) {
+	// add our trainInput & trainOutput to the batch
+	var batchIsReady bool
+	batchIsReady = net.trainInput.Push(input)
+	batchIsReady = net.trainOutput.Push(output)
+
+	loss := xmath.Vec(net.trainInput.Size())
+	net.TmpOutput = xmath.Vec(len(input))
+	if batchIsReady {
+		// we can actually train now ...
+		inp := net.trainInput.Batch()
+		outp := net.trainOutput.Batch()
+		out := net.Forward(inp)
+		// add the cross entropy loss for each of the vectors
+		for i := 0; i < len(outp); i++ {
+			loss[i] = net.loss(outp[i], out[i]).Sum()
+		}
+		net.TmpOutput = out[len(out)-1]
+		net.Backward(outp)
+		net.iteration++
+		net.stats.Add(loss.Sum())
+
+		if net.iteration%100 == 0 {
+			println(fmt.Sprintf("epoch =  = %v , err = %v , mean-err = %v", net.iteration, loss.Sum(), net.stats.Bucket))
+		}
+
+	}
+
+	return loss, weights
+
+}
+
+func (net *RNetwork) Predict(input xmath.Vector) xmath.Vector {
+
+	batchIsReady := net.predictInput.Push(input)
+
+	if batchIsReady {
+		inp := net.predictInput.Batch()
+		out := net.Forward(inp)
+		return out[len(out)-1]
+	}
+
+	return xmath.Vec(len(input))
 }

@@ -9,15 +9,15 @@ import (
 	"os"
 	"sync/atomic"
 
-	"github.com/drakos74/go-ex-machina/xmachina/math"
+	"github.com/drakos74/go-ex-machina/xmath"
 )
 
-func ReadFile(filename string, lines int, iterations int, parse func(record []string) (inp, out math.Vector), data Data, epoch Epoch, ack Ack) (inputSet, outputSet math.Matrix, readErr error) {
+func ReadFile(filename string, lines int, iterations int, parse func(record []string) (inp, out xmath.Vector), data Data, epoch Epoch, ack Ack) (inputSet, outputSet xmath.Matrix, readErr error) {
 
 	// TODO: fix this ugliness with the line parameter
 	if lines > 0 {
-		inputSet = math.Mat(lines)
-		outputSet = math.Mat(lines)
+		inputSet = xmath.Mat(lines)
+		outputSet = xmath.Mat(lines)
 	}
 
 	for i := 0; i < iterations; i++ {

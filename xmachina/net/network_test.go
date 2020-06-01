@@ -1,13 +1,15 @@
 package net
 
 import (
+	"fmt"
+	"math"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/drakos74/go-ex-machina/xmachina/math"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 func TestNetwork_Train_NoActivation(t *testing.T) {
@@ -17,23 +19,23 @@ func TestNetwork_Train_NoActivation(t *testing.T) {
 			Perceptron(ml.Model().
 				Rate(0.05, 0.05).
 				WithActivation(ml.Void{}),
-				math.Def(
-					math.Vec(2).With(0.11, 0.21),
-					math.Vec(2).With(0.12, 0.08),
+				xmath.Def(
+					xmath.Vec(2).With(0.11, 0.21),
+					xmath.Vec(2).With(0.12, 0.08),
 				))).
 		Add(1,
 			Perceptron(ml.Model().
 				Rate(0.05, 0.05).
 				WithActivation(ml.Void{}),
-				math.Def(
-					math.Vec(2).With(0.14, 0.15),
+				xmath.Def(
+					xmath.Vec(2).With(0.14, 0.15),
 				)))
 	//AddSoftMax().
 	n.Trace()
 
 	assertTrain(t, n,
-		math.Vec(2).With(2, 3),
-		math.Vec(1).With(1),
+		xmath.Vec(2).With(2, 3),
+		xmath.Vec(1).With(1),
 		// err : 0.3272
 		[]string{"0.3272"},
 		// neuron : [0,0] -> [0.12,0.23]
@@ -60,23 +62,23 @@ func TestXNetwork_Train_NoActivation(t *testing.T) {
 			Perceptron(ml.Model().
 				Rate(0.05, 0.05).
 				WithActivation(ml.Void{}),
-				math.Def(
-					math.Vec(2).With(0.11, 0.21),
-					math.Vec(2).With(0.12, 0.08),
+				xmath.Def(
+					xmath.Vec(2).With(0.11, 0.21),
+					xmath.Vec(2).With(0.12, 0.08),
 				))).
 		Add(1,
 			Perceptron(ml.Model().
 				Rate(0.05, 0.05).
 				WithActivation(ml.Void{}),
-				math.Def(
-					math.Vec(2).With(0.14, 0.15),
+				xmath.Def(
+					xmath.Vec(2).With(0.14, 0.15),
 				)))
 	//AddSoftMax().
 	n.Trace()
 
 	assertTrain(t, n,
-		math.Vec(2).With(2, 3),
-		math.Vec(1).With(1),
+		xmath.Vec(2).With(2, 3),
+		xmath.Vec(1).With(1),
 		// err : 0.3272
 		[]string{"0.3272"},
 		// neuron : [0,0] -> [0.12,0.23]
@@ -95,7 +97,7 @@ func TestXNetwork_Train_NoActivation(t *testing.T) {
 
 }
 
-func assertTrain(t *testing.T, n NN, inp, out math.Vector, expErr []string, expWeights [][][]string) {
+func assertTrain(t *testing.T, n NN, inp, out xmath.Vector, expErr []string, expWeights [][][]string) {
 
 	err, weights := n.Train(inp, out)
 
@@ -112,4 +114,22 @@ func assertTrain(t *testing.T, n NN, inp, out math.Vector, expErr []string, expW
 		}
 
 	}
+}
+
+func Test_RNetworkSineFunc(t *testing.T) {
+
+	network := NewRNetwork(1, 10, 100, 0.01)
+	network.Loss(ml.Pow)
+
+	f := 0.1
+
+	for i := 0; i < 100; i++ {
+
+		x := f * float64(i)
+
+		err, _ := network.Train(xmath.Vec(1).With(x), xmath.Vec(1).With(math.Sin(x)))
+		println(fmt.Sprintf("err = %v", err.Sum()))
+
+	}
+
 }

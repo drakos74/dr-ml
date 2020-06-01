@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmachina/math"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,8 +19,8 @@ func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 
 	// build the network
 	network := net.New(2, 1).
-		Add(2, net.Perceptron(ml.Model(), math.Const(0.5))). // hidden layer
-		Add(1, net.Perceptron(ml.Model(), math.Const(0.5)))  // output layer
+		Add(2, net.Perceptron(ml.Model(), xmath.Const(0.5))). // hidden layer
+		Add(1, net.Perceptron(ml.Model(), xmath.Const(0.5)))  // output layer
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
@@ -31,12 +31,12 @@ func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
 
-	inputSet := math.Mat(len(records))
-	outputSet := math.Mat(len(records))
+	inputSet := xmath.Mat(len(records))
+	outputSet := xmath.Mat(len(records))
 
 	for i, record := range records {
-		inp := math.Vec(len(record) - 1)
-		out := math.Vec(len(record) - 2)
+		inp := xmath.Vec(len(record) - 1)
+		out := xmath.Vec(len(record) - 2)
 
 		for j, value := range record {
 			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)

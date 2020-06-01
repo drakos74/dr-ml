@@ -1,8 +1,8 @@
 package net
 
 import (
-	"github.com/drakos74/go-ex-machina/xmachina/math"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 type meta struct {
@@ -11,34 +11,34 @@ type meta struct {
 }
 
 type memory struct {
-	input     math.Vector
-	rawOutput float64
-	output    float64
-	delta     math.Vector
+	input  xmath.Vector
+	output float64
+}
+
+type learn struct {
+	weights xmath.Vector
+	bias    float64
 }
 
 type Neuron struct {
 	ml.Module
 	meta
 	memory
-	weights math.Vector
-	bias    float64
+	learn
 }
 
-func (n *Neuron) forward(v math.Vector) float64 {
-	math.MustHaveSameSize(v, n.input)
+func (n *Neuron) forward(v xmath.Vector) float64 {
+	xmath.MustHaveSameSize(v, n.input)
 	n.input = v
-	n.rawOutput = v.Dot(n.weights) + n.bias
-	n.output = n.F(n.rawOutput)
+	n.output = n.F(v.Dot(n.weights) + n.bias)
 	if n.output >= 1 {
 		// TODO : notify of bad weight distribution (?)
 	}
 	return n.output
 }
 
-// TODO : backward for bias
-func (n *Neuron) backward(err float64) math.Vector {
-	loss := math.Vec(len(n.weights))
+func (n *Neuron) backward(err float64) xmath.Vector {
+	loss := xmath.Vec(len(n.weights))
 	grad := n.Module.Grad(err, n.Module.D(n.output))
 	for i, inp := range n.input {
 		// create the error for the previous layer
@@ -50,25 +50,9 @@ func (n *Neuron) backward(err float64) math.Vector {
 	return loss
 }
 
-type NeuronFactory func(p int, meta meta) *Neuron
-
-var Perceptron = func(module ml.Module, weights math.VectorGenerator) NeuronFactory {
-	return func(p int, meta meta) *Neuron {
-		return &Neuron{
-			Module: module,
-			memory: memory{
-				input: math.Vec(p),
-				delta: math.Vec(p),
-			},
-			meta:    meta,
-			weights: weights(p, meta.index),
-		}
-	}
-}
-
 type xNeuron struct {
 	*Neuron
-	input   chan math.Vector
+	input   chan xmath.Vector
 	output  chan xFloat
 	backIn  chan float64
 	backOut chan xVector
@@ -93,4 +77,80 @@ func (xn *xNeuron) init() *xNeuron {
 		}
 	}(xn)
 	return xn
+}
+
+// NeuronFactory is a factory for construction of neuron within the context of a neuron layer / network
+type NeuronFactory func(p int, meta meta) *Neuron
+
+var Perceptron = func(module ml.Module, weights xmath.VectorGenerator) NeuronFactory {
+	return func(p int, meta meta) *Neuron {
+		return &Neuron{
+			Module: module,
+			memory: memory{
+				input: xmath.Vec(p),
+			},
+			meta: meta,
+			learn: learn{
+				weights: weights(p, meta.index),
+			},
+		}
+	}
+}
+
+type state struct {
+	x xmath.Vector
+	h xmath.Vector
+	y xmath.Vector
+}
+
+type rNeuron struct {
+	ml.Activation
+	meta
+	state
+}
+
+// RNeuronFactory is a factory for construction of a recursive neuron within the context of a recursive layer / network
+type RNeuronFactory func(p, n int, meta meta) *rNeuron
+
+var RNeuron = func(activation ml.Activation) RNeuronFactory {
+	return func(p, n int, meta meta) *rNeuron {
+		return &rNeuron{
+			Activation: activation,
+			state: state{
+				x: xmath.Vec(p),
+				h: xmath.Vec(n),
+				y: xmath.Vec(n),
+			},
+			meta: meta,
+		}
+	}
+}
+
+func (rn *rNeuron) forward(v, w xmath.Vector, weights *Weights) (y, wh xmath.Vector) {
+	xmath.MustHaveSameSize(v, rn.x)
+	rn.x = v
+	rn.h = weights.Wxh.Prod(v).
+		Add(weights.Whh.Prod(w)).
+		Add(weights.Bh)
+	rn.h = rn.h.Op(rn.F)
+	rn.y = weights.Why.Prod(rn.h).Add(weights.By)
+	return rn.y, rn.h
+}
+
+func (rn *rNeuron) backward(dy, u xmath.Vector, params *Parameters) (h xmath.Vector, dWhy, dWxh, dWhh xmath.Matrix) {
+
+	// we need to trace our  steps back ...
+	dWhy = dy.Prod(rn.h)
+
+	// delta
+	dh := params.Why.T().Prod(dy)
+	dh = dh.Add(u)
+	// de-activation
+	h = dh.ProdH(rn.h.Op(rn.D))
+
+	dWxh = dh.Prod(rn.x)
+
+	dWhh = dh.Prod(u)
+
+	return h, dWhy, dWxh, dWhh
 }

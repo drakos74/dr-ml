@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
+	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/stretchr/testify/assert"
 )
 

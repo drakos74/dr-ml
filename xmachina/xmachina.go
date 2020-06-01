@@ -6,8 +6,8 @@ import (
 	"log"
 	"math"
 
-	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 type Pair struct {

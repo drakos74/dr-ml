@@ -1,8 +1,10 @@
 package ml
 
 import (
-	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
+	"fmt"
 	"math"
+
+	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 type Module interface {
@@ -20,7 +22,7 @@ type LearningModule struct {
 func Model() *LearningModule {
 	return &LearningModule{
 		Activation: Sigmoid,
-		Learning: ConstantRate{
+		Learning: LearningRate{
 			wrate: 1,
 			brate: 0,
 		},
@@ -29,7 +31,7 @@ func Model() *LearningModule {
 }
 
 func (ml *LearningModule) Rate(wrate, brate float64) *LearningModule {
-	ml.Learning = ConstantRate{wrate: wrate, brate: brate}
+	ml.Learning = LearningRate{wrate: wrate, brate: brate}
 	return ml
 }
 
@@ -66,6 +68,9 @@ var Pow Loss = func(expected, output xmath.Vector) xmath.Vector {
 
 var CrossEntropy Loss = func(expected, output xmath.Vector) xmath.Vector {
 	return expected.Dop(func(x, y float64) float64 {
+		if y == 1 {
+			panic(fmt.Sprintf("cross entropy calculation threshold breached for output %v", y))
+		}
 		return -1 * x * math.Log(y)
 	}, output)
 }

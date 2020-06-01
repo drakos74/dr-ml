@@ -3,7 +3,7 @@ package ml
 import (
 	"math"
 
-	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
+	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 type Activation interface {
@@ -60,6 +60,22 @@ func (v Void) F(x float64) float64 {
 
 func (v Void) D(x float64) float64 {
 	return 1
+}
+
+type SoftActivation interface {
+	F(v xmath.Vector) xmath.Vector
+	D(s xmath.Vector) xmath.Matrix
+}
+
+type SoftUnary struct {
+}
+
+func (s SoftUnary) F(v xmath.Vector) xmath.Vector {
+	return v
+}
+
+func (s SoftUnary) D(y xmath.Vector) xmath.Matrix {
+	return xmath.Mat(len(y)).From(y)
 }
 
 type SoftMax struct {
