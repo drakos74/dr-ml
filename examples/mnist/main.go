@@ -1,4 +1,4 @@
-package main
+package mnist
 
 import (
 	"bufio"
@@ -14,9 +14,9 @@ import (
 
 	"github.com/drakos74/go-ex-machina/xmachina"
 
-	xmath "github.com/drakos74/go-ex-machina/xmachina/math"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 func main() {
