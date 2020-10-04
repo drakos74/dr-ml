@@ -1,10 +1,10 @@
-package net
+package ff
 
 import (
-	"fmt"
-	"math"
 	"strconv"
 	"testing"
+
+	"github.com/drakos74/go-ex-machina/xmachina/net"
 
 	"github.com/stretchr/testify/assert"
 
@@ -97,7 +97,7 @@ func TestXNetwork_Train_NoActivation(t *testing.T) {
 
 }
 
-func assertTrain(t *testing.T, n NN, inp, out xmath.Vector, expErr []string, expWeights [][][]string) {
+func assertTrain(t *testing.T, n net.NN, inp, out xmath.Vector, expErr []string, expWeights [][][]string) {
 
 	err, weights := n.Train(inp, out)
 
@@ -114,22 +114,4 @@ func assertTrain(t *testing.T, n NN, inp, out xmath.Vector, expErr []string, exp
 		}
 
 	}
-}
-
-func Test_RNetworkSineFunc(t *testing.T) {
-
-	network := NewRNetwork(1, 10, 100, 0.01)
-	network.Loss(ml.Pow)
-
-	f := 0.1
-
-	for i := 0; i < 100; i++ {
-
-		x := f * float64(i)
-
-		err, _ := network.Train(xmath.Vec(1).With(x), xmath.Vec(1).With(math.Sin(x)))
-		println(fmt.Sprintf("err = %v", err.Sum()))
-
-	}
-
 }

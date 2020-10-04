@@ -163,17 +163,19 @@ func (v Vector) String() string {
 }
 
 // VectorGenerator is a type alias defining the creation instructions for vectors
-type VectorGenerator func(p, index int) Vector
+// s is the size of the vector
+type VectorGenerator func(s, index int) Vector
 
-// Def defines the vector at the corresponding index
+// Def defines a vector at the corresponding index of a matrix
 var Def = func(m ...Vector) VectorGenerator {
-	return func(p, index int) Vector {
-		MustHaveSize(m[index], p)
+	return func(s, index int) Vector {
+		MustHaveSize(m[index], s)
 		return m[index]
 	}
 }
 
-// Rand generates a vector of the given size with random values between 0 and 1
+// Rand generates a vector of the given size with random values between min and max
+// op defines a scaling operation for the min and max, based on the size of the vector
 var Rand = func(min, max float64, op Op) VectorGenerator {
 	rand.Seed(time.Now().UnixNano())
 	return func(p, index int) Vector {
@@ -195,5 +197,28 @@ var Const = func(v float64) VectorGenerator {
 			w[i] = v
 		}
 		return w
+	}
+}
+
+// ScaledVectorGenerator produces a vector generator scaled by the given factor
+type ScaledVectorGenerator func(d float64) VectorGenerator
+
+// RangeSqrt produces a vector generator scaled by the given factor
+// and within the range provided
+var RangeSqrt = func(min, max float64) ScaledVectorGenerator {
+	return func(d float64) VectorGenerator {
+		return Rand(min, max, func(x float64) float64 {
+			return math.Sqrt(d * x)
+		})
+	}
+}
+
+// Range produces a vector generator scaled by the given factor
+// and within the range provided
+var Range = func(min, max float64) ScaledVectorGenerator {
+	return func(d float64) VectorGenerator {
+		return Rand(min, max, func(x float64) float64 {
+			return x
+		})
 	}
 }

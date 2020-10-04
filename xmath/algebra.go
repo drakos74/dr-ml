@@ -72,7 +72,7 @@ var Unary Vop = func(x Vector) Vector {
 // MustHaveSize will check and make sure that the given vector is of the given size
 func MustHaveDim(m Matrix, n int) {
 	if len(m) != n {
-		panic(fmt.Sprintf("matrix must have primary dimenstion '%v' vs '%v'", m, n))
+		panic(fmt.Sprintf("matrix must have primary dimension '%v' vs '%v'", m, n))
 	}
 }
 

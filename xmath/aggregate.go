@@ -71,33 +71,3 @@ func (a *Aggregate) Add(b Bucket) {
 		a.buckets[b.count] = b
 	}
 }
-
-type Window struct {
-	idx int
-	mem Matrix
-}
-
-func NewWindow(n int) *Window {
-	return &Window{
-		mem: Mat(n),
-	}
-}
-
-func (w *Window) Push(v Vector) bool {
-	w.mem[w.idx%len(w.mem)] = v
-	w.idx++
-	return w.idx >= len(w.mem)
-}
-
-func (w Window) Batch() Matrix {
-	m := Mat(len(w.mem))
-	for i := 0; i < len(w.mem); i++ {
-		ii := (w.idx + i) % len(w.mem)
-		m[i] = w.mem[ii]
-	}
-	return m
-}
-
-func (w Window) Size() int {
-	return len(w.mem)
-}

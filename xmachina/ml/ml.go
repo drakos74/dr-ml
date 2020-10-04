@@ -58,6 +58,8 @@ var NoML = LearningModule{
 
 type Loss func(expected, output xmath.Vector) xmath.Vector
 
+type MLoss func(expected, output xmath.Matrix) xmath.Vector
+
 var Diff Loss = func(expected, output xmath.Vector) xmath.Vector {
 	return expected.Diff(output)
 }
@@ -67,10 +69,28 @@ var Pow Loss = func(expected, output xmath.Vector) xmath.Vector {
 }
 
 var CrossEntropy Loss = func(expected, output xmath.Vector) xmath.Vector {
+	xmath.MustHaveSameSize(expected, output)
 	return expected.Dop(func(x, y float64) float64 {
 		if y == 1 {
 			panic(fmt.Sprintf("cross entropy calculation threshold breached for output %v", y))
 		}
+		println(fmt.Sprintf("x = %v", x))
+		println(fmt.Sprintf("y = %v", y))
 		return -1 * x * math.Log(y)
 	}, output)
+}
+
+func CompLoss(mloss Loss) MLoss {
+	return func(expected, output xmath.Matrix) xmath.Vector {
+		size := len(expected)
+		xmath.MustHaveDim(expected, size)
+		xmath.MustHaveDim(output, size)
+		loss := xmath.Vec(len(expected))
+		for i := 0; i < size; i++ {
+			xmath.MustHaveSameSize(expected[i], output[i])
+			entropy := mloss(expected[i], output[i])
+			loss[i] = entropy.Sum() / float64(size)
+		}
+		return loss
+	}
 }

@@ -1,4 +1,4 @@
-package net
+package ff
 
 import (
 	"fmt"
@@ -184,77 +184,4 @@ func TestSoftMaxLayer(t *testing.T) {
 
 	println(fmt.Sprintf("er = %v", er))
 
-}
-
-func TestRNNLayer_WithSmallLearningRate(t *testing.T) {
-
-	layer := NewRNNLayer(14, 25, 100, ml.Learn(0.0001), RNeuron(ml.TanH), 0).SoftMax()
-
-	inputs, outputs := prepareRNNTrainSet()
-
-	pLoss := math.MaxFloat64
-	for i := 0; i < 100; i++ {
-		loss := trainRNN(layer, inputs, outputs)
-		// with very small learning rate, we should always have incremental improvement!!!
-		assert.True(t, loss < pLoss, fmt.Sprintf("new loss %v should be smaller than previous %v", loss, pLoss))
-		pLoss = loss
-	}
-
-}
-
-func TestRNNLayer_WithoutLearningRate(t *testing.T) {
-
-	layer := NewRNNLayer(14, 25, 100, ml.Learn(0), RNeuron(ml.TanH), 0).SoftMax()
-
-	inputs, outputs := prepareRNNTrainSet()
-
-	var pLoss float64
-	for i := 0; i < 100; i++ {
-		loss := trainRNN(layer, inputs, outputs)
-		// with 'zero' learning rate, we should see no improvement at all!
-		if pLoss > 0 {
-			assert.Equal(t, loss, pLoss)
-		}
-		pLoss = loss
-	}
-
-}
-
-func trainRNN(layer *RNNLayer, inputs, outputs xmath.Matrix) float64 {
-
-	out := layer.Forward(inputs)
-
-	var err float64
-	// calculate the loss
-	for i := 0; i < 25; i++ {
-
-		loss := ml.CrossEntropy(outputs[i], out[i])
-
-		err += loss.Sum()
-
-	}
-
-	layer.Backward(outputs)
-
-	return err
-}
-
-func prepareRNNTrainSet() (inputs, outputs xmath.Matrix) {
-	inp := []int{0, 1, 2, 3, 4, 5, 1, 6, 4, 1, 4, 7, 8, 9, 9, 7, 10, 4, 7, 1, 11, 12, 13, 0, 1}
-	// transform to unique elements
-	inputs = xmath.Mat(25)
-	for i := range inp {
-		input := xmath.Vec(14)
-		input[inp[i]] = 1
-		inputs[i] = input
-	}
-
-	exp := []int{1, 2, 3, 4, 5, 1, 6, 4, 1, 4, 7, 8, 9, 9, 7, 10, 4, 7, 1, 11, 12, 13, 0, 1, 2}
-	outputs = xmath.Mat(25)
-	for i := range inp {
-		output := xmath.Vec(14)
-		output[exp[i]] = 1
-		outputs[i] = output
-	}
-	return
 }

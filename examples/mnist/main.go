@@ -12,10 +12,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
+
 	"github.com/drakos74/go-ex-machina/xmachina"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
-	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmath"
 )
 
@@ -43,10 +44,10 @@ func main() {
 	//	Add(10, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
 	//	AddSoftMax()
 	// ReLU
-	network := net.XNew(784, 10).
-		Add(200, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.ReLU), xmath.Rand(-1, 1, math.Sqrt))).
-		//note : we sould not use ReLU in the output layer
-		Add(10, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
+	network := ff.XNew(784, 10).
+		Add(200, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.ReLU), xmath.Rand(-1, 1, math.Sqrt))).
+		//note : we should not use ReLU in the output layer
+		Add(10, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
 		AddSoftMax()
 
 	data := make(xmachina.Data)
@@ -58,7 +59,7 @@ func main() {
 	ctx, cnl := context.WithCancel(context.Background())
 	go xmachina.TrainInStream(ctx, config, network, data, ack)
 
-	_, _, err = xmachina.ReadFile("examples/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
+	_, _, err := xmachina.ReadFile("examples/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
 
 	if err != nil {
 		log.Fatalf("could not read file: %v", err)
