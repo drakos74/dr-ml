@@ -12,7 +12,6 @@ import (
 type Network struct {
 	*RNNLayer
 	net.Stats
-	loss ml.MLoss
 
 	learn         ml.Learning
 	activation    ml.SoftActivation
@@ -20,9 +19,9 @@ type Network struct {
 
 	n, xDim, hDim int
 
-	predictInput *xmath.Window
-	trainOutput  *xmath.Window
-	TmpOutput    xmath.Vector
+	loss                      ml.MLoss
+	predictInput, trainOutput *xmath.Window
+	TmpOutput                 xmath.Vector
 }
 
 // NewRNNLayer creates a new Recurrent layer
@@ -40,7 +39,7 @@ func New(n, xDim, hDim int) *Network {
 	}
 }
 
-// Init initialises the network layer
+// Init initialises the network recurrent layer.
 func (net *Network) Init(weightGenerator xmath.ScaledVectorGenerator) *Network {
 	//net.RNNLayer = NewRNNLayer(net.n, xDim, hDim, ml.Learn(rate), RNeuron(activation), xmath.RangeSqrt(-1, 1), 0)
 	net.RNNLayer = NewRNNLayer(
@@ -58,8 +57,13 @@ func (net *Network) Rate(rate float64) *Network {
 	return net
 }
 
-func (net *Network) Neuron(activation ml.Activation) *Network {
+func (net *Network) Activation(activation ml.Activation) *Network {
 	net.neuronFactory = RNeuron(activation)
+	return net
+}
+
+func (net *Network) SoftActivation(activation ml.SoftActivation) *Network {
+	net.activation = activation
 	return net
 }
 
