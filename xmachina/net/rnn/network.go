@@ -14,22 +14,53 @@ type Network struct {
 	net.Stats
 	loss ml.MLoss
 
+	learn         ml.Learning
+	activation    ml.SoftActivation
+	neuronFactory NeuronFactory
+
+	n, xDim, hDim int
+
 	predictInput *xmath.Window
 	trainOutput  *xmath.Window
 	TmpOutput    xmath.Vector
 }
 
 // NewRNNLayer creates a new Recurrent layer
-// b : batch size e.g. rnn units
+// n : batch size e.g. rnn units
 // xDim : size of trainInput/trainOutput vector
 // hDim : internal hidden layer size
 // rate : learning rate
-func New(b, xDim, hDim int, rate float64) *Network {
+func New(n, xDim, hDim int) *Network {
 	return &Network{
-		RNNLayer:     NewRNNLayer(b, xDim, hDim, ml.Learn(rate), RNeuron(ml.TanH), xmath.RangeSqrt(-1, 1), 0),
-		predictInput: xmath.NewWindow(b),
-		trainOutput:  xmath.NewWindow(b + 1),
+		n:            n,
+		xDim:         xDim,
+		hDim:         hDim,
+		predictInput: xmath.NewWindow(n),
+		trainOutput:  xmath.NewWindow(n + 1),
 	}
+}
+
+// Init initialises the network layer
+func (net *Network) Init(weightGenerator xmath.ScaledVectorGenerator) *Network {
+	//net.RNNLayer = NewRNNLayer(net.n, xDim, hDim, ml.Learn(rate), RNeuron(activation), xmath.RangeSqrt(-1, 1), 0)
+	net.RNNLayer = NewRNNLayer(
+		net.n,
+		net.xDim,
+		net.hDim,
+		net.learn,
+		net.neuronFactory,
+		weightGenerator, 0)
+	return net
+}
+
+func (net *Network) Rate(rate float64) *Network {
+	net.learn = ml.Learn(rate)
+	return net
+}
+
+func (net *Network) Neuron(activation ml.Activation) *Network {
+	net.neuronFactory = RNeuron(activation)
+	return net
 }
 
 func (net *Network) Loss(loss ml.MLoss) *Network {

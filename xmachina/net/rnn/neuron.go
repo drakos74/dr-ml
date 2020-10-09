@@ -19,11 +19,11 @@ type neuron struct {
 	state
 }
 
-// RNeuronFactory is a factory for construction of a recursive neuron within the context of a recursive layer / network
-type RNeuronFactory func(p, n int, meta net.Meta) *neuron
+// NeuronFactory is a factory for construction of a recursive neuronFactory within the context of a recursive layer / network
+type NeuronFactory func(p, n int, meta net.Meta) *neuron
 
-// RNeuron is the neuron implementation for a recursive neural network.
-var RNeuron = func(activation ml.Activation) RNeuronFactory {
+// RNeuron is the neuronFactory implementation for a recursive neural network.
+var RNeuron = func(activation ml.Activation) NeuronFactory {
 	return func(p, n int, meta net.Meta) *neuron {
 		return &neuron{
 			Activation: activation,
@@ -59,7 +59,7 @@ func (rn *neuron) forward(x, h xmath.Vector, weights *Weights) (y, wh xmath.Vect
 		Floats64("h-in", h).
 		Floats64("h-out", rn.h).
 		Floats64("output", rn.y).
-		Msg("neuron forward")
+		Msg("neuronFactory forward")
 	return rn.y, rn.h
 }
 

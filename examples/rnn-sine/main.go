@@ -22,8 +22,11 @@ func init() {
 }
 
 func main() {
-	network := rnn.New(25, 1, 100, 0.01).
-		Loss(ml.CompLoss(ml.Pow))
+	network := rnn.New(25, 1, 100).
+		Rate(0.01).
+		Neuron(ml.Sigmoid).
+		Loss(ml.CompLoss(ml.Pow)).
+		Init(xmath.RangeSqrt(-1, 1))
 
 	f := 0.025
 

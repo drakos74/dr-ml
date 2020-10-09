@@ -165,10 +165,10 @@ func (r *RNNLayer) Size() int {
 // n : batch size e.g. rnn units
 // xDim : size of trainInput/trainOutput vector
 // hDim : internal hidden layer size
-// factory : neuron factory to be used for the rnn unit
+// factory : neuronFactory factory to be used for the rnn unit
 // index : index of layer in the network
 // TODO : remove the rate and use it within the ml.Module
-func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory RNeuronFactory, weightGenerator xmath.ScaledVectorGenerator, index int) *RNNLayer {
+func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weightGenerator xmath.ScaledVectorGenerator, index int) *RNNLayer {
 	neurons := make([]*neuron, n)
 	for i := 0; i < n; i++ {
 		neuron := factory(xDim, n, net.Meta{
@@ -206,7 +206,7 @@ func (r *RNNLayer) Forward(x xmath.Matrix) xmath.Matrix {
 	// we expect a training set equal to our depth
 	xmath.MustHaveDim(x, n)
 
-	// inter-neuron communication parameter
+	// inter-neuronFactory communication parameter
 	h := xmath.Vec(r.hDim)
 
 	var y xmath.Vector
@@ -217,7 +217,7 @@ func (r *RNNLayer) Forward(x xmath.Matrix) xmath.Matrix {
 		r.out[i] = r.F(y)
 		log.Debug().
 			Int("x", i).
-			Floats64("neuron-out", y).
+			Floats64("neuronFactory-out", y).
 			Floats64("h", h).
 			Floats64("out", r.out[i]).
 			Msg("layer forward")

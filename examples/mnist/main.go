@@ -1,4 +1,4 @@
-package mnist
+package main
 
 import (
 	"bufio"
@@ -39,16 +39,16 @@ func main() {
 	//	Add(200, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt))).
 	//	Add(10, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt)))
 	// tanh with softmax
-	//network := net.XNew(784, 10).
-	//	Add(200, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
-	//	Add(10, net.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
-	//	AddSoftMax()
-	// ReLU
 	network := ff.XNew(784, 10).
-		Add(200, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.ReLU), xmath.Rand(-1, 1, math.Sqrt))).
-		//note : we should not use ReLU in the output layer
+		Add(200, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
 		Add(10, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
 		AddSoftMax()
+	// ReLU
+	//network := ff.XNew(784, 10).
+	//	Add(200, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.ReLU), xmath.Rand(-1, 1, math.Sqrt))).
+	//	//note : we should not use ReLU in the output layer
+	//	Add(10, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
+	//	AddSoftMax()
 
 	data := make(xmachina.Data)
 
