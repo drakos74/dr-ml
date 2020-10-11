@@ -2,16 +2,24 @@ package xmath
 
 type Procedure struct {
 	value *float64
+	limit int
+	count int
 	Transform
 }
 
-func NewProcedure(value *float64, transform Transform) *Procedure {
-	return &Procedure{value: value, Transform: transform}
+func NewProcedure(value *float64, transform Transform, limit int) *Procedure {
+	return &Procedure{
+		value:     value,
+		limit:     limit,
+		Transform: transform,
+	}
 }
 
-func (p *Procedure) Next() {
+func (p *Procedure) Next() bool {
+	p.count++
 	newValue := p.Transform(*p.value)
 	*p.value = newValue
+	return p.count >= p.limit
 }
 
 type Transform func(v float64) float64
