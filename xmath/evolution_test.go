@@ -80,9 +80,9 @@ func TestProcedure_Reset(t *testing.T) {
 
 func TestEvolution_Run(t *testing.T) {
 
-	a := 0.0
-	b := 0.0
-	c := 0.0
+	a := 1.0
+	b := 10.0
+	c := 100.0
 
 	ev := NewEvolution(
 		NewProcedure(&a, IncNum(1.0), 3),

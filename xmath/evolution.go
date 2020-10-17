@@ -56,8 +56,10 @@ func NewProcedure(value *float64, transform Transform, limit int) *Procedure {
 
 func (p *Procedure) Next() bool {
 	p.count++
-	newValue := p.Transform(*p.value)
-	p.set(newValue)
+	if p.count > 1 {
+		newValue := p.Transform(*p.value)
+		p.set(newValue)
+	}
 	return p.count >= p.limit
 }
 
