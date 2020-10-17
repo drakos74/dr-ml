@@ -3,6 +3,8 @@ package rnn
 import (
 	"fmt"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
@@ -103,7 +105,11 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights xmath.Cu
 		net.Stats.Add(loss.Sum())
 		// log progress
 		if net.Iteration%1000 == 0 {
-			println(fmt.Sprintf("epoch =  = %v , err = %v , mean-err = %v", net.Iteration, loss.Sum(), net.Stats.Bucket))
+			log.Info().
+				Int("epoch", net.Iteration).
+				Float64("err", loss.Sum()).
+				Str("mean-err", fmt.Sprintf("%+v", net.Stats.Bucket)).
+				Msg("training iteration")
 		}
 	}
 

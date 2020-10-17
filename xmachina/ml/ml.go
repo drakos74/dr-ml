@@ -74,8 +74,6 @@ var CrossEntropy Loss = func(expected, output xmath.Vector) xmath.Vector {
 		if y == 1 {
 			panic(fmt.Sprintf("cross entropy calculation threshold breached for output %v", y))
 		}
-		println(fmt.Sprintf("x = %v", x))
-		println(fmt.Sprintf("y = %v", y))
 		return -1 * x * math.Log(y)
 	}, output)
 }

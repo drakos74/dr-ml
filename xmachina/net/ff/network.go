@@ -58,7 +58,6 @@ func (n *Network) AddSoftMax() *Network {
 
 func (n *Network) forward(input xmath.Vector) xmath.Vector {
 	output := xmath.Vec(len(input)).With(input...)
-	//println(fmt.Sprintf("n.iter = %v", n.iterations))
 	for _, l := range n.layers {
 		output = l.Forward(output)
 	}
