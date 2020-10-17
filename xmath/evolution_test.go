@@ -15,7 +15,7 @@ func TestIncNum(t *testing.T) {
 
 	w := 4.0
 
-	procedure := NewProcedure(&v, IncNum(w), 50)
+	procedure := NewSequence(&v, IncNum(w), 50)
 
 	j := 0
 	for i := 0; i < 100; i++ {
@@ -42,7 +42,7 @@ func TestIncMul(t *testing.T) {
 
 	w := 3.0
 
-	procedure := NewProcedure(&v, IncMul(w), 3)
+	procedure := NewSequence(&v, IncMul(w), 3)
 
 	j := 0
 	for i := 0; i < 10; i++ {
@@ -64,7 +64,7 @@ func TestIncMul(t *testing.T) {
 func TestProcedure_Reset(t *testing.T) {
 
 	v := 2.0
-	proc := NewProcedure(&v, IncMul(2), 5)
+	proc := NewSequence(&v, IncMul(2), 5)
 
 	for i := 0; i < 100; i++ {
 
@@ -85,9 +85,9 @@ func TestEvolution_Run(t *testing.T) {
 	c := 100.0
 
 	ev := NewEvolution(
-		NewProcedure(&a, IncNum(1.0), 3),
-		NewProcedure(&b, IncNum(10.0), 3),
-		NewProcedure(&c, IncNum(100.0), 3),
+		NewSequence(&a, IncNum(1.0), 3),
+		NewSequence(&b, IncNum(10.0), 3),
+		NewSequence(&c, IncNum(100.0), 3),
 	)
 
 	var count int

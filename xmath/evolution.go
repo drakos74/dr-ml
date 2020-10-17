@@ -3,10 +3,10 @@ package xmath
 type Evolution struct {
 	i, j         int
 	combinations [][]float64
-	procedures   []*Procedure
+	procedures   []*Sequence
 }
 
-func NewEvolution(procedures ...*Procedure) *Evolution {
+func NewEvolution(procedures ...*Sequence) *Evolution {
 
 	// build the parameter space
 	parameters := make([][]float64, len(procedures))
@@ -47,7 +47,7 @@ func (e *Evolution) Next() bool {
 	return true
 }
 
-type Procedure struct {
+type Sequence struct {
 	initialValue float64
 	value        *float64
 	limit        int
@@ -55,8 +55,8 @@ type Procedure struct {
 	Transform
 }
 
-func NewProcedure(value *float64, transform Transform, limit int) *Procedure {
-	return &Procedure{
+func NewSequence(value *float64, transform Transform, limit int) *Sequence {
+	return &Sequence{
 		initialValue: *value,
 		value:        value,
 		limit:        limit,
@@ -64,7 +64,7 @@ func NewProcedure(value *float64, transform Transform, limit int) *Procedure {
 	}
 }
 
-func (p *Procedure) Next() bool {
+func (p *Sequence) Next() bool {
 	p.count++
 	if p.count > 1 {
 		newValue := p.Transform(*p.value)
@@ -73,16 +73,16 @@ func (p *Procedure) Next() bool {
 	return p.count >= p.limit
 }
 
-func (p *Procedure) set(newValue float64) {
+func (p *Sequence) set(newValue float64) {
 	*p.value = newValue
 }
 
-func (p *Procedure) Reset() {
+func (p *Sequence) Reset() {
 	*p.value = p.initialValue
 	p.count = 0
 }
 
-func (p *Procedure) Run() []float64 {
+func (p *Sequence) Run() []float64 {
 	values := make([]float64, 0)
 	var done bool
 	for !done {
