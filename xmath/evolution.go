@@ -25,11 +25,16 @@ func NewEvolution(procedures ...*Procedure) *Evolution {
 }
 
 func (e *Evolution) Next() bool {
+
+	if e.i >= len(e.combinations) {
+		return false
+	}
+
 	for i, value := range e.combinations[e.i] {
 		e.procedures[i].set(value)
 	}
 	e.i++
-	return e.i >= len(e.combinations)
+	return true
 }
 
 type Procedure struct {

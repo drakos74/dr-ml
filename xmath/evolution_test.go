@@ -92,9 +92,7 @@ func TestEvolution_Run(t *testing.T) {
 
 	var count int
 
-	var done bool
-	for !done {
-		done = ev.Next()
+	for ev.Next() {
 		println(fmt.Sprintf("[%v,%v,%v]", a, b, c))
 		count++
 	}
