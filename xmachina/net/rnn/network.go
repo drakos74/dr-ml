@@ -102,7 +102,7 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights xmath.Cu
 		net.Iteration++
 		net.Stats.Add(loss.Sum())
 		// log progress
-		if net.Iteration%100 == 0 {
+		if net.Iteration%1000 == 0 {
 			println(fmt.Sprintf("epoch =  = %v , err = %v , mean-err = %v", net.Iteration, loss.Sum(), net.Stats.Bucket))
 		}
 	}
