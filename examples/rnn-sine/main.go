@@ -26,6 +26,7 @@ func main() {
 		Rate(0.01).
 		Activation(ml.Sigmoid).
 		Loss(ml.CompLoss(ml.Pow)).
+		//Init(xmath.RangeSqrt(-1, 1))
 		Init(xmath.Range(0, 1))
 
 	f := 0.025
