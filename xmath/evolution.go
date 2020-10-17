@@ -26,19 +26,20 @@ func NewEvolution(procedures ...*Procedure) *Evolution {
 
 // Limit returns the amount of iterations defined in this evolution
 func (e *Evolution) Limit() int {
-	l := 1
-	for _, p := range e.procedures {
-		l *= p.limit
-	}
-	return l
+	return len(e.combinations)
 }
 
-func (e *Evolution) Next() bool {
+// Current returns the current state of the evolution
+func (e *Evolution) Current() int {
+	return e.i
+}
 
+// Next updates the procedures with the next value
+// it returns true if there was an update and false if there is nothing more to evolve.
+func (e *Evolution) Next() bool {
 	if e.i >= len(e.combinations) {
 		return false
 	}
-
 	for i, value := range e.combinations[e.i] {
 		e.procedures[i].set(value)
 	}
