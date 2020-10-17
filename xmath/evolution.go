@@ -24,6 +24,15 @@ func NewEvolution(procedures ...*Procedure) *Evolution {
 
 }
 
+// Limit returns the amount of iterations defined in this evolution
+func (e *Evolution) Limit() int {
+	l := 1
+	for _, p := range e.procedures {
+		l *= p.limit
+	}
+	return l
+}
+
 func (e *Evolution) Next() bool {
 
 	if e.i >= len(e.combinations) {
