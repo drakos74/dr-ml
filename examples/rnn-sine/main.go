@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"math"
+	"os"
 
 	"github.com/drakos74/go-ex-machina/xmachina/net/rnn"
 
@@ -22,12 +25,25 @@ func init() {
 }
 
 func main() {
+
+	weights, err := load()
+
 	network := rnn.New(25, 1, 100).
 		Rate(0.01).
 		Activation(ml.Sigmoid).
 		Loss(ml.CompLoss(ml.Pow)).
-		//Init(xmath.RangeSqrt(-1, 1))
-		Init(xmath.Range(0, 1))
+		//InitWeights(xmath.RangeSqrt(-1, 1))
+		InitWeights(xmath.Range(0, 1))
+
+	if err == nil && weights != nil {
+		println("init with weights")
+		network = rnn.New(25, 1, 100).
+			Rate(0.01).
+			Activation(ml.Sigmoid).
+			Loss(ml.CompLoss(ml.Pow)).
+			//InitWeights(xmath.RangeSqrt(-1, 1))
+			WithWeights(*weights)
+	}
 
 	f := 0.025
 
@@ -45,9 +61,10 @@ func main() {
 
 		if i < l*4/5 {
 			rnn.Add(sin, x, y)
-			network.Train(xmath.Vec(1).With(y))
+			_, weights := network.Train(xmath.Vec(1).With(y))
 			rnn.Add(train, x, network.TmpOutput[len(network.TmpOutput)-1])
 			xx = append(xx, x)
+			save(weights)
 		} else {
 			output := network.Predict(xmath.Vec(1).With(y))
 			rnn.Add(train, x, output[0])
@@ -58,4 +75,45 @@ func main() {
 	// draw the data collection
 	graph.Draw("sin", rnn)
 
+}
+
+const fileName = "examples/rnn-sine/data/results.json"
+
+func save(weights rnn.Weights) {
+
+	f, err := os.Create(fileName)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer f.Close()
+
+	b, err := json.Marshal(weights)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	_, err = f.Write(b)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+}
+
+func load() (*rnn.Weights, error) {
+
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	var weights rnn.Weights
+	err = json.Unmarshal(data, &weights)
+	if err != nil {
+		return nil, err
+	}
+
+	return &weights, nil
 }

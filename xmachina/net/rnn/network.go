@@ -41,9 +41,26 @@ func New(n, xDim, hDim int) *Network {
 	}
 }
 
-// Init initialises the network recurrent layer.
-func (net *Network) Init(weightGenerator xmath.ScaledVectorGenerator) *Network {
-	//net.RNNLayer = NewRNNLayer(net.n, xDim, hDim, ml.Learn(rate), RNeuron(activation), xmath.RangeSqrt(-1, 1), 0)
+// WithWeights initialises the network recurrent layer and generates the starting weights.
+func (net *Network) WithWeights(weights Weights) *Network {
+	if net.RNNLayer != nil {
+		panic("rnn layer already initialised")
+	}
+	net.RNNLayer = LoadRNNLayer(
+		net.n,
+		net.xDim,
+		net.hDim,
+		net.learn,
+		net.neuronFactory,
+		weights, 0)
+	return net
+}
+
+// InitWeights initialises the network recurrent layer and generates the starting weights.
+func (net *Network) InitWeights(weightGenerator xmath.ScaledVectorGenerator) *Network {
+	if net.RNNLayer != nil {
+		panic("rnn layer already initialised")
+	}
 	net.RNNLayer = NewRNNLayer(
 		net.n,
 		net.xDim,
@@ -74,7 +91,7 @@ func (net *Network) Loss(loss ml.MLoss) *Network {
 	return net
 }
 
-func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights xmath.Cube) {
+func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights Weights) {
 	// add our trainInput & trainOutput to the batch
 	var batchIsReady bool
 	batchIsReady = net.trainOutput.Push(data)
@@ -104,7 +121,7 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights xmath.Cu
 		net.Iteration++
 		net.Stats.Add(loss.Sum())
 		// log progress
-		if net.Iteration%1000 == 0 {
+		if net.Iteration%100 == 0 {
 			log.Info().
 				Int("epoch", net.Iteration).
 				Float64("err", loss.Sum()).
@@ -113,7 +130,7 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights xmath.Cu
 		}
 	}
 
-	return loss, weights
+	return loss, net.RNNLayer.Weights()
 
 }
 

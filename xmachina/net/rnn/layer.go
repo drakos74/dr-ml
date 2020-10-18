@@ -28,11 +28,11 @@ type Layer interface {
 
 // Weights are the weights for the recurrent layer.
 type Weights struct {
-	Wxh xmath.Matrix
-	Whh xmath.Matrix
-	Why xmath.Matrix
-	Bh  xmath.Vector
-	By  xmath.Vector
+	Wxh xmath.Matrix `json:"wxh"`
+	Whh xmath.Matrix `json:"whh"`
+	Why xmath.Matrix `json:"why"`
+	Bh  xmath.Vector `json:"bh"`
+	By  xmath.Vector `json:"by"`
 }
 
 // String prints the weights.
@@ -90,6 +90,44 @@ func initParameters(xDim, hDim int, gen xmath.ScaledVectorGenerator) *Parameters
 			Bh:  xmath.Vec(hDim),
 			By:  xmath.Vec(xDim),
 		},
+		Deltas: Deltas{
+			mWxh: xmath.Mat(hDim).Of(xDim),
+			mWhh: xmath.Mat(hDim).Of(hDim),
+			mWhy: xmath.Mat(xDim).Of(hDim),
+			mBh:  xmath.Vec(hDim),
+			mBy:  xmath.Vec(xDim),
+		},
+		reset: func(params *Parameters) {
+			params.Deltas.reset(xDim, hDim)
+		},
+		scaleM: func(dm, m xmath.Matrix) xmath.Matrix {
+			m = dm.Op(func(x float64) float64 {
+				return math.Pow(x, 2)
+			}).Add(m)
+			sqrtM := m.Op(func(x float64) float64 {
+				return math.Sqrt(x + 1e-8)
+			})
+			return sqrtM
+		},
+		scaleV: func(dv, v xmath.Vector) xmath.Vector {
+			v = dv.Op(func(x float64) float64 {
+				return math.Pow(x, 2)
+			}).Add(v)
+			sqrtM := v.Op(func(x float64) float64 {
+				return math.Sqrt(x + 1e-8)
+			})
+			return sqrtM
+		},
+	}
+}
+
+// initWithWeights initialises the layer parameters according to the given dimensions and weights.
+// xDim : dimension of input and output vector
+// hDim : dimension of internal state vector
+// weights : the network weights
+func initWithWeights(xDim, hDim int, weights Weights) *Parameters {
+	return &Parameters{
+		Weights: weights,
 		Deltas: Deltas{
 			mWxh: xmath.Mat(hDim).Of(xDim),
 			mWhh: xmath.Mat(hDim).Of(hDim),
@@ -184,6 +222,34 @@ func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory,
 		out:            xmath.Mat(n).Of(xDim),
 		// TODO : Allow to define the initial weights from the constructor call
 		Parameters: initParameters(xDim, hDim, weightGenerator),
+		xDim:       xDim,
+		hDim:       hDim,
+	}
+}
+
+// LoadRNNLayer loads a new Recurrent layer based on the given weights
+// n : batch size e.g. rnn units
+// xDim : size of trainInput/trainOutput vector
+// hDim : internal hidden layer size
+// factory : neuronFactory factory to be used for the rnn unit
+// index : index of layer in the network
+// TODO : remove the rate and use it within the ml.Module
+func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weights Weights, index int) *RNNLayer {
+	neurons := make([]*neuron, n)
+	for i := 0; i < n; i++ {
+		neuron := factory(xDim, n, net.Meta{
+			Index: i,
+			Layer: index,
+		})
+		neurons[i] = neuron
+	}
+	return &RNNLayer{
+		Learning:       learning,
+		SoftActivation: ml.SoftUnary{},
+		neurons:        neurons,
+		out:            xmath.Mat(n).Of(xDim),
+		// TODO : Allow to define the initial weights from the constructor call
+		Parameters: initWithWeights(xDim, hDim, weights),
 		xDim:       xDim,
 		hDim:       hDim,
 	}
