@@ -15,7 +15,7 @@ func TestIncNum(t *testing.T) {
 
 	w := 4.0
 
-	procedure := NewSequence(&v, IncNum(w), 50)
+	procedure := NewSequence(&v, IncNum(w, 0), 50)
 
 	j := 0
 	for i := 0; i < 100; i++ {
@@ -42,7 +42,7 @@ func TestIncMul(t *testing.T) {
 
 	w := 3.0
 
-	procedure := NewSequence(&v, IncMul(w), 3)
+	procedure := NewSequence(&v, IncMul(w, 0), 3)
 
 	j := 0
 	for i := 0; i < 10; i++ {
@@ -64,16 +64,14 @@ func TestIncMul(t *testing.T) {
 func TestProcedure_Reset(t *testing.T) {
 
 	v := 2.0
-	proc := NewSequence(&v, IncMul(2), 5)
+	proc := NewSequence(&v, IncMul(2, 0), 5)
 
 	for i := 0; i < 100; i++ {
-
 		reset := proc.Next()
 		println(fmt.Sprintf("v = %v", v))
 		if reset {
 			proc.Reset()
 		}
-
 	}
 
 }
@@ -85,9 +83,9 @@ func TestEvolution_Run(t *testing.T) {
 	c := 100.0
 
 	ev := NewEvolution(
-		NewSequence(&a, IncNum(1.0), 3),
-		NewSequence(&b, IncNum(10.0), 3),
-		NewSequence(&c, IncNum(100.0), 3),
+		NewSequence(&a, IncNum(1.0, 0), 3),
+		NewSequence(&b, IncNum(10.0, 0), 3),
+		NewSequence(&c, IncNum(100.0, 0), 3),
 	)
 
 	var count int
@@ -98,5 +96,37 @@ func TestEvolution_Run(t *testing.T) {
 	}
 
 	assert.Equal(t, 3*3*3, count)
+
+}
+
+func TestRangeSequence(t *testing.T) {
+
+	var value float64
+
+	sequence := RangeSequence(&value, 1, 100, 10, 0)
+
+	for i := 0; i < 100; i++ {
+		reset := sequence.Next()
+		println(fmt.Sprintf("v = %v", value))
+		if reset {
+			sequence.Reset()
+		}
+	}
+
+}
+
+func TestPerturbationSequence(t *testing.T) {
+
+	value := 10.0
+
+	sequence := PerturbationSequence(&value, 1, 10, 0)
+
+	for i := 0; i < 100; i++ {
+		reset := sequence.Next()
+		println(fmt.Sprintf("v = %v", value))
+		if reset {
+			sequence.Reset()
+		}
+	}
 
 }

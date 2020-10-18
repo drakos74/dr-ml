@@ -16,6 +16,15 @@ const pp = 8
 // Op is a general mathematical operation from one number to another
 type Op func(x float64) float64
 
+// Round defines a round operation for the amount of digits after the comma, provided.
+func Round(digits int) Op {
+	factor := math.Pow(10, float64(digits))
+	return func(x float64) float64 {
+		return math.Round(factor*x) / factor
+	}
+}
+
+// Clip clips the given number to the corresponding min or max value.
 func Clip(min, max float64) Op {
 	return func(x float64) float64 {
 		if x < min {
@@ -28,18 +37,21 @@ func Clip(min, max float64) Op {
 	}
 }
 
+// Scale scales the given number according to the scaling factor provided.
 func Scale(s float64) Op {
 	return func(x float64) float64 {
 		return x * s
 	}
 }
 
+// Add adds the given number to the argument.
 func Add(c float64) Op {
 	return func(x float64) float64 {
 		return x + c
 	}
 }
 
+// Unit is a predefined operation that always returns 1.
 var Unit Op = func(x float64) float64 {
 	return 1
 }

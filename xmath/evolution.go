@@ -55,6 +55,33 @@ type Sequence struct {
 	Transform
 }
 
+func PerturbationSequence(value *float64, step float64, limit, rounding int) *Sequence {
+	transform := IncNum(step, rounding)
+	initialValue := *value - (step * float64(limit) / 2)
+	s := &Sequence{
+		initialValue: initialValue,
+		value:        value,
+		limit:        limit,
+		Transform:    transform,
+	}
+	s.set(initialValue)
+	return s
+}
+
+func RangeSequence(value *float64, start, end float64, limit, rounding int) *Sequence {
+	step := (end - start) / float64(limit)
+	transform := IncNum(step, rounding)
+
+	s := &Sequence{
+		initialValue: start,
+		value:        value,
+		limit:        limit,
+		Transform:    transform,
+	}
+	s.set(start)
+	return s
+}
+
 func NewSequence(value *float64, transform Transform, limit int) *Sequence {
 	return &Sequence{
 		initialValue: *value,
@@ -97,14 +124,14 @@ func (p *Sequence) Run() []float64 {
 
 type Transform func(v float64) float64
 
-func IncNum(w float64) Transform {
+func IncNum(w float64, rounding int) Transform {
 	return func(v float64) float64 {
-		return v + w
+		return Round(rounding)(v + w)
 	}
 }
 
-func IncMul(w float64) Transform {
+func IncMul(w float64, rounding int) Transform {
 	return func(v float64) float64 {
-		return v * w
+		return Round(rounding)(v * w)
 	}
 }

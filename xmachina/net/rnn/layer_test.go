@@ -71,7 +71,7 @@ func TestRNNLayer_Backward(t *testing.T) {
 
 		println(fmt.Sprintf("out = %v", out))
 
-		loss := ml.LossM(output, out)
+		loss := ml.CompLoss(ml.CrossEntropy)(output, out)
 		println(fmt.Sprintf("loss = %v", loss.Sum()))
 
 		oo := layer.Backward(output)
@@ -83,7 +83,7 @@ func TestRNNLayer_Backward(t *testing.T) {
 
 	println(fmt.Sprintf("out = %v", out))
 
-	loss := ml.LossM(output, out)
+	loss := ml.CompLoss(ml.CrossEntropy)(output, out)
 	println(fmt.Sprintf("loss = %v", loss))
 
 }
