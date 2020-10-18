@@ -121,7 +121,7 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights Weights)
 		net.Iteration++
 		net.Stats.Add(loss.Sum())
 		// log progress
-		if net.Iteration%100 == 0 {
+		if net.Iteration%1000 == 0 {
 			log.Info().
 				Int("epoch", net.Iteration).
 				Float64("err", loss.Sum()).
