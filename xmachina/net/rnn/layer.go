@@ -281,7 +281,7 @@ func (r *RNNLayer) Forward(x xmath.Matrix) xmath.Matrix {
 		y, h = r.neurons[i].forward(x[i], h, &r.Parameters.Weights)
 		// apply layer activation
 		r.out[i] = r.F(y)
-		log.Debug().
+		log.Trace().
 			Int("x", i).
 			Floats64("neuronFactory-out", y).
 			Floats64("h", h).
@@ -289,7 +289,7 @@ func (r *RNNLayer) Forward(x xmath.Matrix) xmath.Matrix {
 			Msg("layer forward")
 		lvl := log.Logger.GetLevel()
 		if lvl == zerolog.DebugLevel {
-			println(fmt.Sprintf("r.Weights() = %v", r.Weights()))
+			//println(fmt.Sprintf("r.Weights() = %v", r.Weights()))
 		}
 	}
 	return r.out

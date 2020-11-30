@@ -146,3 +146,30 @@ func (net *Network) Predict(input xmath.Vector) xmath.Vector {
 
 	return xmath.Vec(len(input))
 }
+
+// Evolve continues producing predicting results of the network based on it s own output,
+// for the given iteration interval
+func (net *Network) Evolve(iterations int) xmath.Matrix {
+
+	v := xmath.Mat(iterations)
+
+	input := net.predictInput.Copy()
+
+	if input.IsReady() {
+
+		for i := 0; i < iterations; i++ {
+
+			out := net.Forward(input.Batch())
+
+			output := out[len(out)-1]
+
+			v[i] = output
+
+			input.Push(output)
+
+		}
+
+	}
+
+	return v
+}

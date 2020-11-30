@@ -32,8 +32,8 @@ func main() {
 		Rate(0.01).
 		Activation(ml.Sigmoid).
 		Loss(ml.CompLoss(ml.Pow)).
-		//InitWeights(xmath.RangeSqrt(-1, 1))
-		InitWeights(xmath.Range(0, 1))
+		InitWeights(xmath.RangeSqrt(-1, 1))
+	//InitWeights(xmath.Range(0, 1))
 
 	if err == nil && weights != nil {
 		println("init with weights")

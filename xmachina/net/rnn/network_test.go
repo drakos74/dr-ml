@@ -11,8 +11,11 @@ import (
 
 func Test_RNetworkSineFunc(t *testing.T) {
 
-	network := New(10, 1, 100, 0.01)
-	network.Loss(ml.CE)
+	network := New(10, 1, 100).
+		Rate(0.001).
+		Activation(ml.TanH).
+		Loss(ml.CompLoss(ml.CrossEntropy)).
+		InitWeights(xmath.RangeSqrt(0, 1))
 
 	f := 0.1
 
@@ -24,5 +27,8 @@ func Test_RNetworkSineFunc(t *testing.T) {
 		println(fmt.Sprintf("err = %v", err.Sum()))
 
 	}
+
+	next := network.Evolve(50)
+	println(fmt.Sprintf("next = %v", next))
 
 }

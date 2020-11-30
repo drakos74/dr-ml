@@ -54,7 +54,7 @@ func (rn *neuron) forward(x, h xmath.Vector, weights *Weights) (y, wh xmath.Vect
 	xhy := weights.Why.Prod(rn.h)
 	rn.y = xhy.Add(weights.By)
 
-	log.Debug().
+	log.Trace().
 		Floats64("input", rn.x).
 		Floats64("h-in", h).
 		Floats64("h-out", rn.h).

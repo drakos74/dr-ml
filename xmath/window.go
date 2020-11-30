@@ -33,6 +33,10 @@ func NewSplitWindow(n int) *Window {
 func (w *Window) Push(v Vector) bool {
 	w.mem[w.idx%len(w.mem)] = v
 	w.idx++
+	return w.IsReady()
+}
+
+func (w *Window) IsReady() bool {
 	return w.idx >= len(w.mem)
 }
 
@@ -43,6 +47,14 @@ func (w Window) Batch() Matrix {
 		m[i] = w.mem[ii]
 	}
 	return m
+}
+
+func (w Window) Copy() Window {
+	m := w.Batch()
+	return Window{
+		idx: w.idx,
+		mem: m,
+	}
 }
 
 func (w Window) next(i int) int {

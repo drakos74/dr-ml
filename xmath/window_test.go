@@ -33,6 +33,12 @@ func TestWindow_Add(t *testing.T) {
 	}
 }
 
+func TestWindow_Copy(t *testing.T) {
+
+	// TODO : ...
+
+}
+
 func TestSequence_Get(t *testing.T) {
 
 	const l = 10
