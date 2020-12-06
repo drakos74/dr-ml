@@ -182,6 +182,7 @@ type RNNLayer struct {
 	*Parameters
 	ml.Learning
 	ml.SoftActivation
+	clip    Clip
 	neurons []*neuron
 	idx     int
 	xDim    int
@@ -206,7 +207,7 @@ func (r *RNNLayer) Size() int {
 // factory : neuronFactory factory to be used for the rnn unit
 // index : index of layer in the network
 // TODO : remove the rate and use it within the ml.Module
-func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weightGenerator xmath.ScaledVectorGenerator, index int) *RNNLayer {
+func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weightGenerator xmath.ScaledVectorGenerator, clipping Clip, index int) *RNNLayer {
 	neurons := make([]*neuron, n)
 	for i := 0; i < n; i++ {
 		neuron := factory(xDim, n, net.Meta{
@@ -224,6 +225,7 @@ func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory,
 		Parameters: initParameters(xDim, hDim, weightGenerator),
 		xDim:       xDim,
 		hDim:       hDim,
+		clip:       clipping,
 	}
 }
 
@@ -234,7 +236,7 @@ func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory,
 // factory : neuronFactory factory to be used for the rnn unit
 // index : index of layer in the network
 // TODO : remove the rate and use it within the ml.Module
-func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weights Weights, index int) *RNNLayer {
+func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weights Weights, clipping Clip, index int) *RNNLayer {
 	neurons := make([]*neuron, n)
 	for i := 0; i < n; i++ {
 		neuron := factory(xDim, n, net.Meta{
@@ -252,6 +254,7 @@ func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory
 		Parameters: initWithWeights(xDim, hDim, weights),
 		xDim:       xDim,
 		hDim:       hDim,
+		clip:       clipping,
 	}
 }
 
@@ -322,10 +325,15 @@ func (r *RNNLayer) Backward(exp xmath.Matrix) xmath.Matrix {
 		h = dh
 	}
 
-	// TODO : maybe we dont need this, or can do it somehow different
-	r.dWhy.Op(xmath.Clip(-5, 5))
-	r.dWxh.Op(xmath.Clip(-5, 5))
-	r.dWhh.Op(xmath.Clip(-5, 5))
+	// clip the weights to avoid gradient explosion.
+	w := r.clip.W
+	r.dWhy = r.dWhy.Op(xmath.Clip(-1*w, 1*w))
+	r.dWxh = r.dWxh.Op(xmath.Clip(-1*w, 1*w))
+	r.dWhh = r.dWhh.Op(xmath.Clip(-1*w, 1*w))
+
+	b := r.clip.B
+	r.dBh = r.dBh.Op(xmath.Clip(-1*b, 1*b))
+	r.dBy = r.dBy.Op(xmath.Clip(-1*b, 1*b))
 
 	// do the updates
 	r.Parameters.update(r.Learning)

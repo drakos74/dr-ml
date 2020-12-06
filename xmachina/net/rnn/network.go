@@ -41,8 +41,12 @@ func New(n, xDim, hDim int) *Network {
 	}
 }
 
+type Clip struct {
+	W, B float64
+}
+
 // WithWeights initialises the network recurrent layer and generates the starting weights.
-func (net *Network) WithWeights(weights Weights) *Network {
+func (net *Network) WithWeights(weights Weights, clip Clip) *Network {
 	if net.RNNLayer != nil {
 		panic("rnn layer already initialised")
 	}
@@ -52,12 +56,12 @@ func (net *Network) WithWeights(weights Weights) *Network {
 		net.hDim,
 		net.learn,
 		net.neuronFactory,
-		weights, 0)
+		weights, clip, 0)
 	return net
 }
 
 // InitWeights initialises the network recurrent layer and generates the starting weights.
-func (net *Network) InitWeights(weightGenerator xmath.ScaledVectorGenerator) *Network {
+func (net *Network) InitWeights(weightGenerator xmath.ScaledVectorGenerator, clip Clip) *Network {
 	if net.RNNLayer != nil {
 		panic("rnn layer already initialised")
 	}
@@ -67,7 +71,7 @@ func (net *Network) InitWeights(weightGenerator xmath.ScaledVectorGenerator) *Ne
 		net.hDim,
 		net.learn,
 		net.neuronFactory,
-		weightGenerator, 0)
+		weightGenerator, clip, 0)
 	return net
 }
 

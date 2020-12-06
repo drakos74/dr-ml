@@ -28,11 +28,13 @@ func main() {
 
 	weights, err := load()
 
+	weights = nil
+
 	network := rnn.New(25, 1, 100).
 		Rate(0.01).
 		Activation(ml.Sigmoid).
 		Loss(ml.CompLoss(ml.Pow)).
-		InitWeights(xmath.RangeSqrt(-1, 1))
+		InitWeights(xmath.RangeSqrt(-1, 1), rnn.Clip{20, 20})
 	//InitWeights(xmath.Range(0, 1))
 
 	if err == nil && weights != nil {
@@ -42,7 +44,7 @@ func main() {
 			Activation(ml.Sigmoid).
 			Loss(ml.CompLoss(ml.Pow)).
 			//InitWeights(xmath.RangeSqrt(-1, 1))
-			WithWeights(*weights)
+			WithWeights(*weights, rnn.Clip{0, 0})
 	}
 
 	f := 0.025
