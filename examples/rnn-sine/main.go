@@ -6,12 +6,13 @@ import (
 	"math"
 	"os"
 
+	"github.com/drakos74/go-ex-machina/xmath"
+
 	"github.com/drakos74/go-ex-machina/xmachina/net/rnn"
 
 	"github.com/rs/zerolog"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
-	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/drakos74/oremi/graph"
 )
 

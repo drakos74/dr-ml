@@ -4,12 +4,13 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/drakos74/go-ex-machina/xmath"
+
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
-	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 func TestNetwork_Train_NoActivation(t *testing.T) {

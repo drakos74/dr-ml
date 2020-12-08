@@ -3,17 +3,18 @@ package rnn
 import (
 	"fmt"
 
+	"github.com/drakos74/go-ex-machina/xmath"
+
+	"github.com/drakos74/go-ex-machina/xmath/time"
+
 	"github.com/rs/zerolog/log"
 
-	"github.com/drakos74/go-ex-machina/xmachina/net"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
-	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 type Network struct {
 	*RNNLayer
-	net.Stats
+	*xmath.Stats
 
 	learn         ml.Learning
 	activation    ml.SoftActivation
@@ -22,7 +23,7 @@ type Network struct {
 	n, xDim, hDim int
 
 	loss                      ml.MLoss
-	predictInput, trainOutput *xmath.Window
+	predictInput, trainOutput *time.Window
 	TmpOutput                 xmath.Vector
 }
 
@@ -36,8 +37,9 @@ func New(n, xDim, hDim int) *Network {
 		n:            n,
 		xDim:         xDim,
 		hDim:         hDim,
-		predictInput: xmath.NewWindow(n),
-		trainOutput:  xmath.NewWindow(n + 1),
+		predictInput: time.NewWindow(n),
+		trainOutput:  time.NewWindow(n + 1),
+		Stats:        xmath.NewStats(),
 	}
 }
 
@@ -107,8 +109,8 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights Weights)
 		// we can actually train now ...
 		batch := net.trainOutput.Batch()
 
-		inp := xmath.Inp(batch)
-		outp := xmath.Outp(batch)
+		inp := time.Inp(batch)
+		outp := time.Outp(batch)
 
 		// forward pass
 		out := net.Forward(inp)
@@ -122,14 +124,13 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights Weights)
 		// backward pass
 		net.Backward(outp)
 		// update stats
-		net.Iteration++
-		net.Stats.Add(loss.Sum())
+		net.Inc(loss.Sum())
 		// log progress
 		if net.Iteration%1000 == 0 {
 			log.Info().
 				Int("epoch", net.Iteration).
 				Float64("err", loss.Sum()).
-				Str("mean-err", fmt.Sprintf("%+v", net.Stats.Bucket)).
+				Str("mean-err", fmt.Sprintf("%+v", net.Stats)).
 				Msg("training iteration")
 		}
 	}

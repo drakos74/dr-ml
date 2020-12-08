@@ -1,8 +1,10 @@
-package xmath
+package time
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/drakos74/go-ex-machina/xmath"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +16,7 @@ func TestWindow_Add(t *testing.T) {
 	w := NewWindow(10)
 
 	for i := 0; i < 125; i++ {
-		isReady := w.Push(Vec(1).With(float64(i)))
+		isReady := w.Push(xmath.Vec(1).With(float64(i)))
 		if i < size {
 			assert.False(t, isReady)
 		} else {
@@ -43,10 +45,10 @@ func TestSequence_Get(t *testing.T) {
 
 	const l = 10
 
-	s := Mat(l)
+	s := xmath.Mat(l)
 
 	for i := 0; i < l; i++ {
-		s[i] = Vec(1).With(float64(i))
+		s[i] = xmath.Vec(1).With(float64(i))
 	}
 
 	println(fmt.Sprintf("seq = %v", s))

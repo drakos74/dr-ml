@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/drakos74/go-ex-machina/xmath"
+
 	"github.com/stretchr/testify/assert"
 )
 

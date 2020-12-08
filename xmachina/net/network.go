@@ -38,8 +38,3 @@ func (cfg *Config) HasDebugEnabled() bool {
 func (cfg *Config) HasTraceEnabled() bool {
 	return cfg.trace
 }
-
-type Stats struct {
-	Iteration int
-	xmath.Bucket
-}

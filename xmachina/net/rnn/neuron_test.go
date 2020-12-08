@@ -5,10 +5,11 @@ import (
 	"math"
 	"testing"
 
+	"github.com/drakos74/go-ex-machina/xmath"
+
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
-	"github.com/drakos74/go-ex-machina/xmath"
 )
 
 func TestRNeuron_DimensionsInForwardPass(t *testing.T) {
