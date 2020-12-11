@@ -99,15 +99,13 @@ func (net *Network) Loss(loss ml.MLoss) *Network {
 
 func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights Weights) {
 	// add our trainInput & trainOutput to the batch
-	batchIsReady := net.trainOutput.Push(data)
+	batch, batchIsReady := net.trainOutput.Push(data)
 	// be ready for predictions ... from the start
 	net.predictInput.Push(data)
 	loss := xmath.Vec(len(data))
 	net.TmpOutput = xmath.Vec(len(data))
 	if batchIsReady {
 		// we can actually train now ...
-		batch := net.trainOutput.Batch()
-
 		inp := time.Inp(batch)
 		outp := time.Outp(batch)
 
@@ -140,40 +138,12 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights Weights)
 
 func (net *Network) Predict(input xmath.Vector) xmath.Vector {
 
-	batchIsReady := net.predictInput.Push(input)
+	batch, batchIsReady := net.predictInput.Push(input)
 
 	if batchIsReady {
-		batch := net.predictInput.Batch()
 		out := net.Forward(batch)
 		return out[len(out)-1]
 	}
 
 	return xmath.Vec(len(input))
-}
-
-// Evolve continues producing predicting results of the network based on it s own output,
-// for the given iteration interval
-func (net *Network) Evolve(iterations int) xmath.Matrix {
-
-	v := xmath.Mat(iterations)
-
-	input := net.predictInput.Copy()
-
-	if input.IsReady() {
-
-		for i := 0; i < iterations; i++ {
-
-			out := net.Forward(input.Batch())
-
-			output := out[len(out)-1]
-
-			v[i] = output
-
-			input.Push(output)
-
-		}
-
-	}
-
-	return v
 }

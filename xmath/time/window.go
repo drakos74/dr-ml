@@ -4,17 +4,19 @@ import (
 	"github.com/drakos74/go-ex-machina/xmath"
 )
 
+// Inp keeps all rows of a matrix except the last.
 func Inp(s xmath.Matrix) xmath.Matrix {
 	return xmath.Mat(len(s) - 1).With(s[:len(s)-1]...)
 }
 
+// Outp keeps all rows of a matrix except for the last.
 func Outp(s xmath.Matrix) xmath.Matrix {
 	return xmath.Mat(len(s) - 1).With(s[1:]...)
 }
 
 // Window is a temporary cache of vectors
 // it re-uses a slice of vectors (matrix) and keeps track of the starting index.
-// In that sense it s effectively ring.
+// In that sense it s effectively a ring.
 // A major differentiating factor is the (+1) logic,
 // where the last element is handled separately.
 type Window struct {
@@ -34,17 +36,24 @@ func NewSplitWindow(n int) *Window {
 	}
 }
 
-func (w *Window) Push(v xmath.Vector) bool {
+// Push adds an element to the window.
+func (w *Window) Push(v xmath.Vector) (xmath.Matrix, bool) {
 	w.mem[w.idx%len(w.mem)] = v
 	w.idx++
-	return w.IsReady()
+	if w.isReady() {
+		batch := w.batch()
+		return batch, true
+	}
+	return nil, false
 }
 
-func (w *Window) IsReady() bool {
+// isReady returns true if we completed the batch requirements.
+func (w *Window) isReady() bool {
 	return w.idx >= len(w.mem)
 }
 
-func (w Window) Batch() xmath.Matrix {
+// batch returns the current batch.
+func (w Window) batch() xmath.Matrix {
 	m := xmath.Mat(len(w.mem))
 	for i := 0; i < len(w.mem); i++ {
 		ii := w.next(i)
@@ -54,7 +63,7 @@ func (w Window) Batch() xmath.Matrix {
 }
 
 func (w Window) Copy() Window {
-	m := w.Batch()
+	m := w.batch()
 	return Window{
 		idx: w.idx,
 		mem: m,

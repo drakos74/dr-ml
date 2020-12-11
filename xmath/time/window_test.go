@@ -15,8 +15,8 @@ func TestWindow_Add(t *testing.T) {
 
 	w := NewWindow(10)
 
-	for i := 0; i < 125; i++ {
-		isReady := w.Push(xmath.Vec(1).With(float64(i)))
+	for i := 1; i < 25; i++ {
+		batch, isReady := w.Push(xmath.Vec(1).With(float64(i)))
 		if i < size {
 			assert.False(t, isReady)
 		} else {
@@ -24,13 +24,12 @@ func TestWindow_Add(t *testing.T) {
 		}
 
 		if isReady {
-			batch := w.Batch()
 			// batch size should be consistent
 			assert.Equal(t, size, len(batch))
 			// first batch element should be 10 elements back
-			assert.Equal(t, float64(i-size), batch[0][0])
+			assert.Equal(t, float64(i-size)+1, batch[0][0])
 			// last element should be the last inserted
-			assert.Equal(t, float64(i), Outp(batch)[0])
+			assert.Equal(t, float64(i), batch[len(batch)-1][0])
 		}
 	}
 }

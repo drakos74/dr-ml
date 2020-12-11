@@ -21,7 +21,7 @@ func (s sigmoid) F(x float64) float64 {
 }
 
 func (s sigmoid) D(y float64) float64 {
-	return y * (1.0 - y)
+	return s.F(y) * (1.0 - s.F(y))
 }
 
 var TanH = tanH{}
