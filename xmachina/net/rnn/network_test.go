@@ -32,7 +32,4 @@ func Test_RNetworkSineFunc(t *testing.T) {
 
 	}
 
-	next := network.Evolve(50)
-	println(fmt.Sprintf("next = %v", next))
-
 }
