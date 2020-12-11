@@ -28,7 +28,7 @@ jobs:
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: v1.33
-
+          skip-dirs-use-default: true
           # Optional: working directory, useful for monorepos
 #          working-directory: xmachina
 
