@@ -68,7 +68,6 @@ func TestProcedure_Reset(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		reset := proc.Next()
-		println(fmt.Sprintf("v = %v", v))
 		if reset {
 			proc.Reset()
 		}
@@ -107,7 +106,6 @@ func TestRangeSequence(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		reset := sequence.Next()
-		println(fmt.Sprintf("v = %v", value))
 		if reset {
 			sequence.Reset()
 		}
@@ -123,7 +121,6 @@ func TestPerturbationSequence(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		reset := sequence.Next()
-		println(fmt.Sprintf("v = %v", value))
 		if reset {
 			sequence.Reset()
 		}

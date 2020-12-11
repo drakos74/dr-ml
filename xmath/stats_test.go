@@ -50,15 +50,12 @@ func TestWindow_Push(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		index := int64(i)
 		v := i * 10
-		nextIndex, ready := w.Push(index, float64(v))
+		_, ready := w.Push(index, float64(v))
 		// compute avg manually
 
 		if ready {
 			bucket := w.Get()
 			avg := bucket.Stats().mean
-			println(fmt.Sprintf("bucket = %+v", bucket))
-			println(fmt.Sprintf("bucket.Index() = %v , bucket.Size() = %v", bucket.Index(), bucket.Size()))
-			println(fmt.Sprintf("window.Index() = %v , bucket.Next() = %v", index, nextIndex))
 
 			assert.Equal(t, 5, bucket.Size())
 			assert.Equal(t, float64(sum)/5, avg)

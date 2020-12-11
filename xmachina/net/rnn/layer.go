@@ -7,7 +7,6 @@ import (
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmath"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -274,10 +273,6 @@ func (r *Layer) Forward(x xmath.Matrix) xmath.Matrix {
 			Floats64("h", h).
 			Floats64("out", r.out[i]).
 			Msg("layer forward")
-		lvl := log.Logger.GetLevel()
-		if lvl == zerolog.TraceLevel {
-			println(fmt.Sprintf("r.Weights() = %v", r.Weights()))
-		}
 	}
 	return r.out
 }

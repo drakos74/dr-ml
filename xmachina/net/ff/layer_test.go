@@ -122,8 +122,6 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 		i++
 	}
 
-	log.Println(fmt.Sprintf("v = %v", v))
-
 	for i, e := range exp {
 		for j, r := range e {
 			v := v[i][j]
@@ -171,13 +169,9 @@ func TestSoftMaxLayer(t *testing.T) {
 
 	v := xmath.Vec(10).With(0.1, 2, 3, 5, 1, 7, 4, 4, 0.5, 7)
 
-	println(fmt.Sprintf("v = %v", v))
-
 	o := l.Forward(v)
 
 	assert.Equal(t, 1.0, math.Round(o.Sum()))
-
-	println(fmt.Sprintf("o = %v", o))
 
 	e := xmath.Const(0.5)(10, 0)
 
