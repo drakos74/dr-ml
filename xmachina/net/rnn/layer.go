@@ -11,18 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Layer is the recurrent layer to be used in a recurrent network.
-type Layer interface {
-	// F will take the trainInput from the previous layer and generate an trainInput for the next layer
-	Forward(v xmath.Matrix) xmath.Matrix
-	// Backward will take the loss from next layer and generate a loss for the previous layer
-	Backward(dv xmath.Matrix) xmath.Matrix
-	// Weights returns the current weight matrix for the layer
-	Weights() Parameters
-	// Size returns the Size of the layer e.g. number of neurons
-	Size() int
-}
-
 // Weights are the weights for the recurrent layer.
 type Weights struct {
 	Wxh xmath.Matrix `json:"wxh"`
@@ -174,26 +162,25 @@ func (p *Parameters) update(rate ml.Learning) {
 	p.Bh = p.Bh.Add(dbh)
 }
 
-// RNNLayer is the recurrent network layer.
-type RNNLayer struct {
+// Layer is the recurrent network layer.
+type Layer struct {
 	*Parameters
 	ml.Learning
 	ml.SoftActivation
 	clip    Clip
 	neurons []*neuron
-	idx     int
 	xDim    int
 	hDim    int
 	out     xmath.Matrix
 }
 
 // Weights returns the layer weights.
-func (r *RNNLayer) Weights() Weights {
+func (r *Layer) Weights() Weights {
 	return r.Parameters.Weights
 }
 
 // Size returns the number of recurrent neurons in the layer.
-func (r *RNNLayer) Size() int {
+func (r *Layer) Size() int {
 	return len(r.neurons)
 }
 
@@ -204,7 +191,7 @@ func (r *RNNLayer) Size() int {
 // factory : neuronFactory factory to be used for the rnn unit
 // index : index of layer in the network
 // TODO : remove the rate and use it within the ml.Module
-func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weightGenerator xmath.ScaledVectorGenerator, clipping Clip, index int) *RNNLayer {
+func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weightGenerator xmath.ScaledVectorGenerator, clipping Clip, index int) *Layer {
 	neurons := make([]*neuron, n)
 	for i := 0; i < n; i++ {
 		neuron := factory(xDim, n, net.Meta{
@@ -213,7 +200,7 @@ func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory,
 		})
 		neurons[i] = neuron
 	}
-	return &RNNLayer{
+	return &Layer{
 		Learning:       learning,
 		SoftActivation: ml.SoftUnary{},
 		neurons:        neurons,
@@ -233,7 +220,7 @@ func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory,
 // factory : neuronFactory factory to be used for the rnn unit
 // index : index of layer in the network
 // TODO : remove the rate and use it within the ml.Module
-func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weights Weights, clipping Clip, index int) *RNNLayer {
+func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weights Weights, clipping Clip, index int) *Layer {
 	neurons := make([]*neuron, n)
 	for i := 0; i < n; i++ {
 		neuron := factory(xDim, n, net.Meta{
@@ -242,7 +229,7 @@ func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory
 		})
 		neurons[i] = neuron
 	}
-	return &RNNLayer{
+	return &Layer{
 		Learning:       learning,
 		SoftActivation: ml.SoftUnary{},
 		neurons:        neurons,
@@ -256,7 +243,7 @@ func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory
 }
 
 // SoftMax returns the softmax function used for activation.
-func (r *RNNLayer) SoftMax() *RNNLayer {
+func (r *Layer) SoftMax() *Layer {
 	r.SoftActivation = ml.SoftMax{}
 	return r
 }
@@ -265,7 +252,7 @@ func (r *RNNLayer) SoftMax() *RNNLayer {
 // x is the input
 // rows of x are the input values at different time instances
 // e.g. x[0] , x[1] , x[2] etc ...
-func (r *RNNLayer) Forward(x xmath.Matrix) xmath.Matrix {
+func (r *Layer) Forward(x xmath.Matrix) xmath.Matrix {
 
 	n := len(r.neurons)
 
@@ -288,8 +275,8 @@ func (r *RNNLayer) Forward(x xmath.Matrix) xmath.Matrix {
 			Floats64("out", r.out[i]).
 			Msg("layer forward")
 		lvl := log.Logger.GetLevel()
-		if lvl == zerolog.DebugLevel {
-			//println(fmt.Sprintf("r.Weights() = %v", r.Weights()))
+		if lvl == zerolog.TraceLevel {
+			println(fmt.Sprintf("r.Weights() = %v", r.Weights()))
 		}
 	}
 	return r.out
@@ -297,7 +284,7 @@ func (r *RNNLayer) Forward(x xmath.Matrix) xmath.Matrix {
 
 // Backward handles the backpropagation logic for the layer.
 // exp : is the expected output
-func (r *RNNLayer) Backward(exp xmath.Matrix) xmath.Matrix {
+func (r *Layer) Backward(exp xmath.Matrix) xmath.Matrix {
 
 	r.Parameters.reset(r.Parameters)
 

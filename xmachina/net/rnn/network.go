@@ -13,7 +13,7 @@ import (
 )
 
 type Network struct {
-	*RNNLayer
+	*Layer
 	*xmath.Stats
 
 	learn         ml.Learning
@@ -49,10 +49,10 @@ type Clip struct {
 
 // WithWeights initialises the network recurrent layer and generates the starting weights.
 func (net *Network) WithWeights(weights Weights, clip Clip) *Network {
-	if net.RNNLayer != nil {
+	if net.Layer != nil {
 		panic("rnn layer already initialised")
 	}
-	net.RNNLayer = LoadRNNLayer(
+	net.Layer = LoadRNNLayer(
 		net.n,
 		net.xDim,
 		net.hDim,
@@ -64,10 +64,10 @@ func (net *Network) WithWeights(weights Weights, clip Clip) *Network {
 
 // InitWeights initialises the network recurrent layer and generates the starting weights.
 func (net *Network) InitWeights(weightGenerator xmath.ScaledVectorGenerator, clip Clip) *Network {
-	if net.RNNLayer != nil {
+	if net.Layer != nil {
 		panic("rnn layer already initialised")
 	}
-	net.RNNLayer = NewRNNLayer(
+	net.Layer = NewRNNLayer(
 		net.n,
 		net.xDim,
 		net.hDim,
@@ -99,8 +99,7 @@ func (net *Network) Loss(loss ml.MLoss) *Network {
 
 func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights Weights) {
 	// add our trainInput & trainOutput to the batch
-	var batchIsReady bool
-	batchIsReady = net.trainOutput.Push(data)
+	batchIsReady := net.trainOutput.Push(data)
 	// be ready for predictions ... from the start
 	net.predictInput.Push(data)
 	loss := xmath.Vec(len(data))
@@ -135,7 +134,7 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights Weights)
 		}
 	}
 
-	return loss, net.RNNLayer.Weights()
+	return loss, net.Layer.Weights()
 
 }
 

@@ -135,7 +135,7 @@ func TestRNNLayer_WithoutLearningRate(t *testing.T) {
 
 }
 
-func trainRNN(layer *RNNLayer, inputs, outputs xmath.Matrix) float64 {
+func trainRNN(layer *Layer, inputs, outputs xmath.Matrix) float64 {
 
 	out := layer.Forward(inputs)
 
