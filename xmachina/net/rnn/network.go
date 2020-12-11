@@ -27,7 +27,7 @@ type Network struct {
 	TmpOutput                 xmath.Vector
 }
 
-// NewRNNLayer creates a new Recurrent layer
+// New creates a new Recurrent layer
 // n : batch size e.g. rnn units
 // xDim : size of trainInput/trainOutput vector
 // hDim : internal hidden layer size

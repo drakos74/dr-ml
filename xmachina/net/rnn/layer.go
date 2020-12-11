@@ -326,7 +326,8 @@ func (r *RNNLayer) Backward(exp xmath.Matrix) xmath.Matrix {
 		h = dh
 	}
 
-	// clip the weights to avoid gradient explosion.
+	// clip the weights on the positive axis to avoid exploding gradients.
+	// clip the weights on the negative axis to avoid vanishing gradients.
 	w := r.clip.W
 	r.dWhy = r.dWhy.Op(xmath.Clip(-1*w, 1*w))
 	r.dWxh = r.dWxh.Op(xmath.Clip(-1*w, 1*w))

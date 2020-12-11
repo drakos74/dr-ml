@@ -60,7 +60,7 @@ func main() {
 	for i := 0; i < l; i++ {
 
 		x := f * float64(i)
-		y := 10 * math.Sin(x)
+		y := evolveSineVar(i, x)
 
 		if i < l*4/5 {
 			rnn.Add(sin, x, y)
@@ -78,6 +78,18 @@ func main() {
 	// draw the data collection
 	graph.Draw("sin", rnn)
 
+}
+
+func evolveSine(i int, x float64) float64 {
+	return 10 * math.Sin(x)
+}
+
+func evolveSineVar(i int, x float64) float64 {
+	twist := float64(i) / float64(100)
+	if i%10 == 0 {
+		twist = -1 * twist
+	}
+	return 10*math.Sin(x) + twist
 }
 
 const fileName = "examples/rnn-sine/data/results.json"
