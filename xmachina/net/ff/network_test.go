@@ -38,7 +38,7 @@ func TestNetwork_Train_NoActivation(t *testing.T) {
 		xmath.Vec(2).With(2, 3),
 		xmath.Vec(1).With(1),
 		// err : 0.3272
-		[]string{"0.3272"},
+		[]string{"0.8090"},
 		// neuron : [0,0] -> [0.12,0.23]
 		// neuron : [0,1] -> [0.13,0.10]
 		// neuron : [1,0] -> [0.17,0.17]
@@ -81,7 +81,7 @@ func TestXNetwork_Train_NoActivation(t *testing.T) {
 		xmath.Vec(2).With(2, 3),
 		xmath.Vec(1).With(1),
 		// err : 0.3272
-		[]string{"0.3272"},
+		[]string{"0.8090"},
 		// neuron : [0,0] -> [0.12,0.23]
 		// neuron : [0,1] -> [0.13,0.10]
 		// neuron : [1,0] -> [0.17,0.17]

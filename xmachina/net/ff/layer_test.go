@@ -93,7 +93,7 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 
 	v := xmath.Mat(len(inp))
 
-	errThreshold := 0.00001
+	errThreshold := 0.001
 
 	sumErr := 0.0
 	var finishedAt int
