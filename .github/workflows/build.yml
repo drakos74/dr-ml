@@ -1,4 +1,4 @@
-name: golangci-lint
+name: go-ci
 on:
   push:
     tags:
@@ -8,8 +8,8 @@ on:
       - main
   pull_request:
 jobs:
-  setup:
-    name: lint
+  setup-go:
+    name: setup go
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
