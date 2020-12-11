@@ -19,7 +19,7 @@ func TestLayer_LeaningProcess(t *testing.T) {
 
 	module := ml.Model().Rate(1, 0.05)
 
-	layer := NewFFLayer(2, 2, Perceptron(module, xmath.Const(0.5)), 0)
+	layer := NewLayer(2, 2, Perceptron(module, xmath.Const(0.5)), 0)
 
 	inp1 := []float64{0, 1}
 	exp1 := []float64{1, 0}
@@ -89,7 +89,7 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 	log.Println(fmt.Sprintf("inp = %v", inp))
 	log.Println(fmt.Sprintf("exp = %v", exp))
 
-	layer := NewFFLayer(2, 2, Perceptron(ml.Model(), xmath.Const(0.5)), 0)
+	layer := NewLayer(2, 2, Perceptron(ml.Model(), xmath.Const(0.5)), 0)
 
 	v := xmath.Mat(len(inp))
 
@@ -112,7 +112,7 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 			break
 		}
 
-		assert.True(t, sumErr-loss.Norm()/loss.Norm() < 0.01, fmt.Sprintf("%v : %v < %v for \n inp = %v exp = %v", i, loss.Norm(), sumErr, inp, exp))
+		assert.True(t, (sumErr-loss.Norm())/loss.Norm() < 0.01, fmt.Sprintf("%v : %v < %v for \n inp = %v exp = %v", i, loss.Norm(), sumErr, inp, exp))
 		sumErr = loss.Norm()
 
 		if i%10001 == 0 {
@@ -138,7 +138,7 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 
 func TestFFLayer_WithNoLearning(t *testing.T) {
 
-	layer := NewFFLayer(2, 2, Perceptron(ml.Model().Rate(0, 0), xmath.Const(0.5)), 0)
+	layer := NewLayer(2, 2, Perceptron(ml.Model().Rate(0, 0), xmath.Const(0.5)), 0)
 
 	inp := []float64{0.3, 0.7}
 

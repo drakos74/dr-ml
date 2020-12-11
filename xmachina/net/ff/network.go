@@ -10,7 +10,7 @@ type Network struct {
 	net.Info
 	net.Config
 	loss   ml.Loss
-	layers []Layer
+	layers []net.FFLayer
 }
 
 func New(inputSize, outputSize int) *Network {
@@ -19,7 +19,7 @@ func New(inputSize, outputSize int) *Network {
 			InputSize:  inputSize,
 			OutputSize: outputSize,
 		},
-		layers: make([]Layer, 0),
+		layers: make([]net.FFLayer, 0),
 		loss:   ml.Diff,
 	}
 }
@@ -38,7 +38,7 @@ func (n *Network) Add(s int, factory NeuronFactory) *Network {
 		ps = n.layers[ls-1].Size()
 	}
 
-	n.layers = append(n.layers, NewFFLayer(ps, s, factory, len(n.layers)))
+	n.layers = append(n.layers, NewLayer(ps, s, factory, len(n.layers)))
 	return n
 }
 

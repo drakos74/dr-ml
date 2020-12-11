@@ -35,19 +35,19 @@ func (ml *LearningModule) Rate(wrate, brate float64) *LearningModule {
 	return ml
 }
 
-func (lm *LearningModule) WithActivation(activation Activation) *LearningModule {
-	lm.Activation = activation
-	return lm
+func (ml *LearningModule) WithActivation(activation Activation) *LearningModule {
+	ml.Activation = activation
+	return ml
 }
 
-func (lm *LearningModule) WithRate(rate Learning) *LearningModule {
-	lm.Learning = rate
-	return lm
+func (ml *LearningModule) WithRate(rate Learning) *LearningModule {
+	ml.Learning = rate
+	return ml
 }
 
-func (lm *LearningModule) WithDescent(descent Descent) *LearningModule {
-	lm.Descent = descent
-	return lm
+func (ml *LearningModule) WithDescent(descent Descent) *LearningModule {
+	ml.Descent = descent
+	return ml
 }
 
 var NoML = LearningModule{

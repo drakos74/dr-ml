@@ -6,23 +6,12 @@ import (
 	"github.com/drakos74/go-ex-machina/xmath"
 )
 
-type Layer interface {
-	// F will take the input from the previous layer and generate an input for the next layer
-	Forward(v xmath.Vector) xmath.Vector
-	// Backward will take the loss from next layer and generate a loss for the previous layer
-	Backward(dv xmath.Vector) xmath.Vector
-	// Weights returns the current weight matrix for the layer
-	Weights() xmath.Matrix
-	// Size returns the Size of the layer e.g. number of neurons
-	Size() int
-}
-
-type FFLayer struct {
+type Layer struct {
 	pSize   int
 	neurons []*Neuron
 }
 
-func NewFFLayer(p, n int, factory NeuronFactory, index int) Layer {
+func NewLayer(p, n int, factory NeuronFactory, index int) net.FFLayer {
 	neurons := make([]*Neuron, n)
 	for i := 0; i < n; i++ {
 		neurons[i] = factory(p, net.Meta{
@@ -30,16 +19,16 @@ func NewFFLayer(p, n int, factory NeuronFactory, index int) Layer {
 			Layer: index,
 		})
 	}
-	return &FFLayer{pSize: p, neurons: neurons}
+	return &Layer{pSize: p, neurons: neurons}
 }
 
-func (l *FFLayer) Size() int {
+func (l *Layer) Size() int {
 	return len(l.neurons)
 }
 
 // forward takes as input the outputs of all the neurons of the previous layer
 // it returns the output of all the neurons of the current layer
-func (l *FFLayer) Forward(v xmath.Vector) xmath.Vector {
+func (l *Layer) Forward(v xmath.Vector) xmath.Vector {
 	// we are building the output vector for the next layer
 	out := xmath.Vec(len(l.neurons))
 	// each neuron will receive the same vector input from the previous layer outputs
@@ -56,7 +45,7 @@ func (l *FFLayer) Forward(v xmath.Vector) xmath.Vector {
 
 // backward receives all the errors from the following layer
 // it returns the full matrix of partial errors for the previous layer
-func (l *FFLayer) Backward(err xmath.Vector) xmath.Vector {
+func (l *Layer) Backward(err xmath.Vector) xmath.Vector {
 	// we are preparing the error output for the previous layer
 	dn := xmath.Mat(len(l.neurons))
 	for i, n := range l.neurons {
@@ -66,7 +55,7 @@ func (l *FFLayer) Backward(err xmath.Vector) xmath.Vector {
 	return dn.T().Sum()
 }
 
-func (l *FFLayer) Weights() xmath.Matrix {
+func (l *Layer) Weights() xmath.Matrix {
 	m := xmath.Mat(l.Size())
 	for j := 0; j < len(l.neurons); j++ {
 		m[j] = l.neurons[j].weights
