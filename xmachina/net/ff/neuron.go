@@ -10,12 +10,12 @@ import (
 
 type memory struct {
 	input  xmath.Vector
-	output float64
+	output float64 //nolint:golint,unused
 }
 
 type learn struct {
 	weights xmath.Vector
-	bias    float64
+	bias    float64 //nolint:golint,unused
 }
 
 type Neuron struct {
