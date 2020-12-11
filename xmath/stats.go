@@ -211,8 +211,6 @@ func (w *Window) Get() Bucket {
 
 // TimeWindow is a window indexed by the current time.
 type TimeWindow struct {
-	c        int
-	i        int64
 	index    int64
 	duration int64
 	window   *Window

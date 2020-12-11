@@ -1,7 +1,7 @@
 package xmath
 
 type Evolution struct {
-	i, j         int
+	i            int
 	combinations [][]float64
 	procedures   []*Sequence
 }
