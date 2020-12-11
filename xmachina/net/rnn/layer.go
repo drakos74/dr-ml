@@ -4,15 +4,11 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/drakos74/go-ex-machina/xmath"
-
-	"github.com/drakos74/go-ex-machina/xmachina/net"
-
-	"github.com/rs/zerolog"
-
-	"github.com/rs/zerolog/log"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 // Layer is the recurrent layer to be used in a recurrent network.

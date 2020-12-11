@@ -9,19 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath"
-
-	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
-	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
+	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 
 	// build the network
-	network := net.New(2, 1).
+	network := ff.New(2, 1).
 		Add(2, ff.Perceptron(ml.Model(), xmath.Const(0.5))). // hidden layer
 		Add(1, ff.Perceptron(ml.Model(), xmath.Const(0.5)))  // output layer
 
