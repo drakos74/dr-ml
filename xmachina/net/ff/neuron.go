@@ -1,8 +1,6 @@
 package ff
 
 import (
-	"fmt"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmath"
@@ -29,10 +27,6 @@ func (n *Neuron) forward(v xmath.Vector) float64 {
 	xmath.MustHaveSameSize(v, n.input)
 	n.input = v
 	n.output = n.F(v.Dot(n.weights) + n.bias)
-	if n.output >= 1 {
-		// TODO : notify of bad weight distribution (?)
-		panic(fmt.Sprintf("unexpected large output %v", n.output))
-	}
 	return n.output
 }
 
