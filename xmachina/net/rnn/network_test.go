@@ -16,7 +16,10 @@ func Test_RNetworkSineFunc(t *testing.T) {
 		Rate(0.001).
 		Activation(ml.TanH).
 		Loss(ml.CompLoss(ml.CrossEntropy)).
-		InitWeights(xmath.RangeSqrt(0, 1))
+		InitWeights(xmath.RangeSqrt(0, 1), Clip{
+			W: 1,
+			B: 1,
+		})
 
 	f := 0.1
 

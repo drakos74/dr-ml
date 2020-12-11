@@ -17,7 +17,10 @@ func TestRNNLayer_ForwardWithPositiveWeights(t *testing.T) {
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	layer := NewRNNLayer(5, 1, 10, ml.Learn(0.0001), RNeuron(ml.TanH), xmath.RangeSqrt(0, 1), 0)
+	layer := NewRNNLayer(5, 1, 10, ml.Learn(0.0001), RNeuron(ml.TanH), xmath.RangeSqrt(0, 1), Clip{
+		W: 1,
+		B: 1,
+	}, 0)
 
 	// 2 is the lookback rate e.g. 2 neurons, 2 time instances are tracked
 	// each timeinstance
@@ -46,7 +49,10 @@ func TestRNNLayer_Backward(t *testing.T) {
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	layer := NewRNNLayer(5, 1, 10, ml.Learn(0.01), RNeuron(ml.ReLU), xmath.RangeSqrt(0, 1), 0)
+	layer := NewRNNLayer(5, 1, 10, ml.Learn(0.01), RNeuron(ml.ReLU), xmath.RangeSqrt(0, 1), Clip{
+		W: 1,
+		B: 1,
+	}, 0)
 
 	// 2 is the lookback rate e.g. 2 neurons, 2 time instances are tracked
 	// each timeinstance
@@ -91,7 +97,10 @@ func TestRNNLayer_Backward(t *testing.T) {
 
 func TestRNNLayer_WithSmallLearningRate(t *testing.T) {
 
-	layer := NewRNNLayer(25, 14, 100, ml.Learn(0.0001), RNeuron(ml.TanH), xmath.RangeSqrt(-1, 1), 0).SoftMax()
+	layer := NewRNNLayer(25, 14, 100, ml.Learn(0.0001), RNeuron(ml.TanH), xmath.RangeSqrt(-1, 1), Clip{
+		W: 1,
+		B: 1,
+	}, 0).SoftMax()
 
 	inputs, outputs := prepareRNNTrainSet()
 
@@ -107,7 +116,10 @@ func TestRNNLayer_WithSmallLearningRate(t *testing.T) {
 
 func TestRNNLayer_WithoutLearningRate(t *testing.T) {
 
-	layer := NewRNNLayer(25, 14, 100, ml.Learn(0), RNeuron(ml.TanH), xmath.RangeSqrt(-1, 1), 0).SoftMax()
+	layer := NewRNNLayer(25, 14, 100, ml.Learn(0), RNeuron(ml.TanH), xmath.RangeSqrt(-1, 1), Clip{
+		W: 1,
+		B: 1,
+	}, 0).SoftMax()
 
 	inputs, outputs := prepareRNNTrainSet()
 
