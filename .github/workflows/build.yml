@@ -19,7 +19,7 @@ jobs:
           go-version: '1.15.5' # The Go version to download (if necessary) and use.
       - run: go test -race -cover -covermode=aromic ./...
   golangci-xmachina:
-    name: lint
+    name: lint-xmachina
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,15 +30,15 @@ jobs:
           version: v1.33
 
           # Optional: working directory, useful for monorepos
-          working-directory: xmachina
+          #          working-directory: xmachina
 
           # Optional: golangci-lint command line arguments.
-          # args: --issues-exit-code=0
+          args: --skip-dirs examples --print-issued-lines
 
           # Optional: show only new issues if it's a pull request. The default value is `false`.
           # only-new-issues: true
   golangci-xmath:
-    name: lint
+    name: lint-xmath
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -52,7 +52,7 @@ jobs:
           working-directory: xmath
 
           # Optional: golangci-lint command line arguments.
-          # args: --issues-exit-code=0
+          args: --print-issued-lines
 
-          # Optional: show only new issues if it's a pull request. The default value is `false`.
+            # Optional: show only new issues if it's a pull request. The default value is `false`.
           # only-new-issues: true
