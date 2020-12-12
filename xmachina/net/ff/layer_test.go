@@ -110,7 +110,6 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 			break
 		}
 
-		//assert.True(t, sumErr/loss.Norm() < 0.01, fmt.Sprintf("%v : %v < %v for \n inp = %v exp = %v", i, loss.Norm(), sumErr, inp, exp))
 		sumErr = loss.Norm()
 
 		if i%10001 == 0 {
