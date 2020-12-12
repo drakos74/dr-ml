@@ -15,12 +15,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
+func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
-		Add(2, ff.Perceptron(ml.Model(), xmath.Const(0.5))). // hidden layer
-		Add(1, ff.Perceptron(ml.Model(), xmath.Const(0.5)))  // output layer
+		Add(10, ff.Perceptron(ml.Model(), xmath.Const(0.5))). // hidden layer
+		Add(1, ff.Perceptron(ml.Model(), xmath.Const(0.5)))   // output layer
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
