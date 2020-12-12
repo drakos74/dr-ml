@@ -8,12 +8,10 @@ import (
 )
 
 func TestMathSyntax(t *testing.T) {
-
 	v := 1.0
 	w := v + 1e-8
 
 	println(fmt.Sprintf("w = %v", w))
-
 }
 
 func TestRoundOp(t *testing.T) {

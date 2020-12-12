@@ -1,7 +1,6 @@
 package xmath
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
@@ -13,7 +12,10 @@ import (
 
 func TestBucket_Push(t *testing.T) {
 
-	b := Bucket{}
+	var idx int64 = 1
+	b := Bucket{
+		index: idx,
+	}
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -22,7 +24,7 @@ func TestBucket_Push(t *testing.T) {
 	values := make([]float64, 100)
 	for i := 0; i < 100; i++ {
 		f := rand.Float64()
-		b.Push(f, 1)
+		b.Push(f, idx)
 		sum += f
 		values[i] = f
 		squaredSum += math.Pow(f, 2)
@@ -32,6 +34,7 @@ func TestBucket_Push(t *testing.T) {
 
 	assert.True(t, mean > 0)
 
+	// check that the mean is calculated correctly
 	assert.Equal(t, strconv.FormatFloat(mean, 'f', 5, 64), strconv.FormatFloat(b.stats.mean, 'f', 5, 64))
 
 	var sqrtSum float64
@@ -86,11 +89,10 @@ func TestTimeWindow_Push(t *testing.T) {
 			v := float64(now.Unix())
 			//println(fmt.Sprintf("v = %v", v))
 			if b, ok := w.Push(v, now); ok {
-				println(fmt.Sprintf("b = %v", b))
+				assert.True(t, b.stats.count > 0)
 				c++
 				next := w.Next(1)
-				println(fmt.Sprintf("next = %v", next))
-				println(fmt.Sprintf("now = %v", now))
+				assert.Equal(t, now.Add(time.Second).Unix(), next.Unix())
 			}
 			i++
 		}
@@ -98,7 +100,6 @@ func TestTimeWindow_Push(t *testing.T) {
 
 	<-ticker.C
 
-	println(fmt.Sprintf("w = %+v", w))
 	assert.Equal(t, 5, c)
 
 }

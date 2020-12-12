@@ -120,9 +120,7 @@ func (b *Bucket) Push(v float64, index int64) bool {
 	if index != b.index {
 		return false
 	}
-
 	b.stats.Push(v)
-
 	return true
 }
 

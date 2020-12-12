@@ -29,7 +29,7 @@ func TestIncNum(t *testing.T) {
 			assert.False(t, done)
 		}
 
-		evolution := float64(i+1) * w
+		evolution := float64(i) * w
 		assert.Equal(t, a+evolution, v)
 	}
 
@@ -55,7 +55,7 @@ func TestIncMul(t *testing.T) {
 			assert.False(t, done)
 		}
 
-		evolution := math.Pow(w, float64(i+1))
+		evolution := math.Pow(w, float64(i))
 		assert.Equal(t, fmt.Sprintf("%.2f", a*evolution), fmt.Sprintf("%.2f", v))
 	}
 
@@ -69,6 +69,8 @@ func TestProcedure_Reset(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		reset := proc.Next()
 		if reset {
+			// assert reset should happen every 5 iterations
+			assert.Equal(t, 0, (i+1)%5)
 			proc.Reset()
 		}
 	}
@@ -89,8 +91,14 @@ func TestEvolution_Run(t *testing.T) {
 
 	var count int
 
+	evolutions := make(map[string]struct{})
+
 	for ev.Next() {
-		println(fmt.Sprintf("[%v,%v,%v]", a, b, c))
+		k := fmt.Sprintf("[%v,%v,%v]", a, b, c)
+		// check that every evolution is a unnique combination
+		_, ok := evolutions[k]
+		assert.False(t, ok)
+		evolutions[k] = struct{}{}
 		count++
 	}
 
@@ -107,6 +115,8 @@ func TestRangeSequence(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		reset := sequence.Next()
 		if reset {
+			// assert reset should happen every 10 iterations
+			assert.Equal(t, 0, (i+1)%10)
 			sequence.Reset()
 		}
 	}
@@ -122,6 +132,8 @@ func TestPerturbationSequence(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		reset := sequence.Next()
 		if reset {
+			// assert reset should happen every 10 iterations
+			assert.Equal(t, 0, (i+1)%10)
 			sequence.Reset()
 		}
 	}
