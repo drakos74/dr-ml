@@ -77,28 +77,36 @@ func TestTimeWindow_Push(t *testing.T) {
 
 	w := NewTimeWindow(time.Second)
 
-	c := 0
+	var c int
+	count := make(chan int)
 
 	// run for 5 seconds ...
-	ticker := time.NewTicker(5 * time.Second)
 	go func() {
 		i := int64(0)
-
+		tick := time.NewTicker(5 * time.Second)
 		for {
-			now := time.Now()
-			v := float64(now.Unix())
-			//println(fmt.Sprintf("v = %v", v))
-			if b, ok := w.Push(v, now); ok {
-				assert.True(t, b.stats.count > 0)
-				c++
-				next := w.Next(1)
-				assert.Equal(t, now.Add(time.Second).Unix(), next.Unix())
+			select {
+			case <-tick.C:
+				close(count)
+				return
+			default:
+				now := time.Now()
+				v := float64(now.Unix())
+				//println(fmt.Sprintf("v = %v", v))
+				if b, ok := w.Push(v, now); ok {
+					assert.True(t, b.stats.count > 0)
+					count <- 1
+					next := w.Next(1)
+					assert.Equal(t, now.Add(time.Second).Unix(), next.Unix())
+				}
+				i++
 			}
-			i++
 		}
 	}()
 
-	<-ticker.C
+	for i := range count {
+		c += i
+	}
 
 	assert.Equal(t, 5, c)
 

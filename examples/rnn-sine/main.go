@@ -60,7 +60,7 @@ func main() {
 	for i := 0; i < l; i++ {
 
 		x := f * float64(i)
-		y := evolveSineVar(i, x)
+		y := evolveSine(i, x)
 
 		if i < l*4/5 {
 			rnn.Add(sin, x, y)
@@ -84,11 +84,10 @@ func evolveSine(i int, x float64) float64 {
 	return 10 * math.Sin(x)
 }
 
+// evolveSineVar reveals the shortcomings of an RNN,
+// not being able to capture variations in period.
 func evolveSineVar(i int, x float64) float64 {
 	twist := float64(i) / float64(100)
-	if i%10 == 0 {
-		twist = -1 * twist
-	}
 	return 10*math.Sin(x) + twist
 }
 
