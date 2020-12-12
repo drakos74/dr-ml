@@ -22,7 +22,7 @@ type LearningModule struct {
 func Model() *LearningModule {
 	return &LearningModule{
 		Activation: Sigmoid,
-		Learning: LearningRate{
+		Learning: &LearningRate{
 			wrate: 1,
 			brate: 0,
 		},
@@ -30,8 +30,8 @@ func Model() *LearningModule {
 	}
 }
 
-func (ml *LearningModule) Rate(wrate, brate float64) *LearningModule {
-	ml.Learning = LearningRate{wrate: wrate, brate: brate}
+func (ml *LearningModule) Rate(wRate, bRate float64) *LearningModule {
+	ml.Learning = &LearningRate{wrate: wRate, brate: bRate}
 	return ml
 }
 

@@ -17,7 +17,7 @@ import (
 // This is a repetition of TestNeuron_BinaryClassification in neuron_test.go
 func TestLayer_LeaningProcess(t *testing.T) {
 
-	module := ml.Model().Rate(1, 0.05)
+	module := ml.Model().Rate(0.5, 0)
 
 	layer := NewLayer(2, 2, Perceptron(module, xmath.Const(0.5)), 0)
 
@@ -46,7 +46,8 @@ func TestLayer_LeaningProcess(t *testing.T) {
 
 		loss := err1.Add(err2).Norm()
 
-		assert.True(t, loss <= err || math.Abs(loss-err) < 0.00001, fmt.Sprintf("loss = %v > err = %v", loss, err))
+		// check that performance improves
+		assert.True(t, loss <= err || math.Abs(loss-err) < 0.001, fmt.Sprintf("i:%d loss = %v > err = %v", i, loss, err))
 		err = loss
 		if err < 0.0001 && finishedAt == 0 {
 			finishedAt = i
@@ -85,9 +86,6 @@ func TestLayer_RandomLearningProcessScenarios(t *testing.T) {
 }
 
 func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
-
-	log.Println(fmt.Sprintf("inp = %v", inp))
-	log.Println(fmt.Sprintf("exp = %v", exp))
 
 	layer := NewLayer(2, 2, Perceptron(ml.Model(), xmath.Const(0.5)), 0)
 
@@ -162,7 +160,6 @@ func TestFFLayer_WithNoLearning(t *testing.T) {
 
 }
 
-// TODO : test softmax layer
 func TestSoftMaxLayer(t *testing.T) {
 
 	l := NewSMLayer(10, 0)

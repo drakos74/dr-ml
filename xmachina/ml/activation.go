@@ -20,8 +20,8 @@ func (s sigmoid) F(x float64) float64 {
 	return 1.0 / (1.0 + math.Exp(-1*x))
 }
 
-func (s sigmoid) D(y float64) float64 {
-	return s.F(y) * (1.0 - s.F(y))
+func (s sigmoid) D(x float64) float64 {
+	return s.F(x) * (1.0 - s.F(x))
 }
 
 var TanH = tanH{}

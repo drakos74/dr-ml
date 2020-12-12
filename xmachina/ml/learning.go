@@ -21,13 +21,13 @@ type LearningRate struct {
 }
 
 func Learn(rate float64) Learning {
-	return LearningRate{wrate: rate, brate: rate}
+	return &LearningRate{wrate: rate, brate: rate}
 }
 
-func (c LearningRate) WRate() float64 {
+func (c *LearningRate) WRate() float64 {
 	return c.wrate
 }
 
-func (c LearningRate) BRate() float64 {
+func (c *LearningRate) BRate() float64 {
 	return c.brate
 }

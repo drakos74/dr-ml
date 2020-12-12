@@ -26,7 +26,7 @@ type Neuron struct {
 func (n *Neuron) forward(v xmath.Vector) float64 {
 	xmath.MustHaveSameSize(v, n.input)
 	n.input = v
-	n.output = n.F(v.Dot(n.weights) + n.bias)
+	n.output = n.Module.F(v.Dot(n.weights) + n.bias)
 	return n.output
 }
 

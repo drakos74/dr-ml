@@ -167,13 +167,13 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 
 }
 
-func TestNetwork_BinaryClassificationSoftmaxInMem(t *testing.T) {
+func TestNetwork_BinaryClassification2D_InMem(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 2).
-		Add(2, ff.Perceptron(ml.Model().Rate(0.05, 0.05), xmath.Rand(0, 1, xmath.Unit))).
-		Add(2, ff.Perceptron(ml.Model().Rate(0.05, 0.05), xmath.Rand(0, 1, xmath.Unit))).
-		AddSoftMax() // output layer
+		Add(20, ff.Perceptron(ml.Model().Rate(5, 0), xmath.Rand(-1, 1, xmath.Unit))).
+		Add(2, ff.Perceptron(ml.Model().Rate(5, 0), xmath.Rand(-1, 1, xmath.Unit)))
+	//.AddSoftMax()
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
@@ -213,17 +213,15 @@ func TestNetwork_BinaryClassificationSoftmaxInMem(t *testing.T) {
 		outputSet[i] = out
 	}
 
-	println(fmt.Sprintf("outputSet = %v", outputSet))
-	println(fmt.Sprintf("inputSet = %v", inputSet))
-
-	TrainInMem(Training(0.0001, 10000), network, inputSet, outputSet)
+	TrainInMem(Training(0.000001, 10000), network, inputSet, outputSet)
 
 	// check trained network performance
 
 	for i, input := range inputSet {
 		o := network.Predict(input)
 		r := outputSet[i]
-		assert.Equal(t, r, o)
+		assert.Equal(t, fmt.Sprintf("%.2f", r[0]), fmt.Sprintf("%.2f", o[0]))
+		assert.Equal(t, fmt.Sprintf("%.2f", r[1]), fmt.Sprintf("%.2f", o[1]))
 	}
 
 }
