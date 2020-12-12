@@ -50,4 +50,9 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          stable: 'false'
+          go-version: '1.15.5' # The Go version to download (if necessary) and use.
       - run: go test -race -cover -covermode=atomic ./...
