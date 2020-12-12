@@ -91,7 +91,7 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 
 	v := xmath.Mat(len(inp))
 
-	errThreshold := 0.001
+	errThreshold := 0.0001
 
 	sumErr := 0.0
 	var finishedAt int
@@ -122,8 +122,8 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 	for i, e := range exp {
 		for j, r := range e {
 			v := v[i][j]
-			lossThreshold := errThreshold * 10
-			assert.True(t, math.Abs(v-r) < lossThreshold, fmt.Sprintf("%v >= %v for \n inp = %v exp = %v", math.Abs(v-r), lossThreshold, inp, exp))
+			lossThreshold := errThreshold * 100
+			assert.True(t, math.Abs(v-r) < lossThreshold, fmt.Sprintf("i:%d %v >= %v for \n inp = %v exp = %v", i, math.Abs(v-r), lossThreshold, inp, exp))
 		}
 
 	}
