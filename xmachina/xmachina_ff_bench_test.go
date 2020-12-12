@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
+func testNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
