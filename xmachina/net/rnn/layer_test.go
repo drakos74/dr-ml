@@ -17,7 +17,7 @@ func TestRNNLayer_ForwardWithPositiveWeights(t *testing.T) {
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	layer := NewRNNLayer(5, 1, 10, ml.Learn(0.0001), RNeuron(ml.TanH), xmath.RangeSqrt(0, 1), Clip{
+	layer := NewLayer(5, 1, 10, ml.Learn(0.0001), Neuron(ml.TanH), xmath.RangeSqrt(0, 1), Clip{
 		W: 1,
 		B: 1,
 	}, 0)
@@ -49,7 +49,7 @@ func TestRNNLayer_Backward(t *testing.T) {
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	layer := NewRNNLayer(5, 1, 10, ml.Learn(0.01), RNeuron(ml.ReLU), xmath.RangeSqrt(0, 1), Clip{
+	layer := NewLayer(5, 1, 10, ml.Learn(0.01), Neuron(ml.ReLU), xmath.RangeSqrt(0, 1), Clip{
 		W: 1,
 		B: 1,
 	}, 0)
@@ -97,7 +97,7 @@ func TestRNNLayer_Backward(t *testing.T) {
 
 func TestRNNLayer_WithSmallLearningRate(t *testing.T) {
 
-	layer := NewRNNLayer(25, 14, 100, ml.Learn(0.0001), RNeuron(ml.TanH), xmath.RangeSqrt(-1, 1), Clip{
+	layer := NewLayer(25, 14, 100, ml.Learn(0.0001), Neuron(ml.TanH), xmath.RangeSqrt(-1, 1), Clip{
 		W: 1,
 		B: 1,
 	}, 0).SoftMax()
@@ -116,7 +116,7 @@ func TestRNNLayer_WithSmallLearningRate(t *testing.T) {
 
 func TestRNNLayer_WithoutLearningRate(t *testing.T) {
 
-	layer := NewRNNLayer(25, 14, 100, ml.Learn(0), RNeuron(ml.TanH), xmath.RangeSqrt(-1, 1), Clip{
+	layer := NewLayer(25, 14, 100, ml.Learn(0), Neuron(ml.TanH), xmath.RangeSqrt(-1, 1), Clip{
 		W: 1,
 		B: 1,
 	}, 0).SoftMax()

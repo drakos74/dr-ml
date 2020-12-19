@@ -68,9 +68,9 @@ func initParameters(xDim, hDim int, gen xmath.ScaledVectorGenerator) *Parameters
 	dd := float64(hDim)
 	return &Parameters{
 		Weights: Weights{
-			Wxh: xmath.Mat(hDim).Rows(xDim, gen(dd)),
-			Whh: xmath.Mat(hDim).Rows(hDim, gen(dd)),
-			Why: xmath.Mat(xDim).Rows(hDim, gen(dd)),
+			Wxh: xmath.Mat(hDim).Generate(xDim, gen(dd)),
+			Whh: xmath.Mat(hDim).Generate(hDim, gen(dd)),
+			Why: xmath.Mat(xDim).Generate(hDim, gen(dd)),
 			Bh:  xmath.Vec(hDim),
 			By:  xmath.Vec(xDim),
 		},
@@ -183,14 +183,14 @@ func (r *Layer) Size() int {
 	return len(r.neurons)
 }
 
-// NewRNNLayer creates a new Recurrent layer
+// NewLayer creates a new Recurrent layer
 // n : batch size e.g. rnn units
 // xDim : size of trainInput/trainOutput vector
 // hDim : internal hidden layer size
 // factory : neuronFactory factory to be used for the rnn unit
 // index : index of layer in the network
 // TODO : remove the rate and use it within the ml.Module
-func NewRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weightGenerator xmath.ScaledVectorGenerator, clipping Clip, index int) *Layer {
+func NewLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weightGenerator xmath.ScaledVectorGenerator, clipping Clip, index int) *Layer {
 	neurons := make([]*neuron, n)
 	for i := 0; i < n; i++ {
 		neuron := factory(xDim, n, net.Meta{

@@ -14,20 +14,20 @@ import (
 
 func TestRNeuron_DimensionsInForwardPass(t *testing.T) {
 
-	rNeuron := RNeuron(ml.TanH)(3, 5, net.Meta{})
+	rNeuron := Neuron(ml.TanH)(3, 5, net.Meta{})
 
 	// trainInput layer size : 3
 	// trainOutput layer size : 2
 	// layer depth : 5
 
-	xt := xmath.Mat(10).Rows(3, xmath.Rand(-1, 1, math.Sqrt))
-	h0 := xmath.Mat(10).Rows(5, xmath.Rand(-1, 1, math.Sqrt))
+	xt := xmath.Mat(10).Generate(3, xmath.Rand(-1, 1, math.Sqrt))
+	h0 := xmath.Mat(10).Generate(5, xmath.Rand(-1, 1, math.Sqrt))
 
 	params := &Parameters{
 		Weights: Weights{
-			Whh: xmath.Mat(5).Rows(5, xmath.Rand(-1, 1, math.Sqrt)),
-			Wxh: xmath.Mat(5).Rows(3, xmath.Rand(-1, 1, math.Sqrt)),
-			Why: xmath.Mat(2).Rows(5, xmath.Rand(-1, 1, math.Sqrt)),
+			Whh: xmath.Mat(5).Generate(5, xmath.Rand(-1, 1, math.Sqrt)),
+			Wxh: xmath.Mat(5).Generate(3, xmath.Rand(-1, 1, math.Sqrt)),
+			Why: xmath.Mat(2).Generate(5, xmath.Rand(-1, 1, math.Sqrt)),
 			Bh:  xmath.Rand(-1, 1, math.Sqrt)(5, 0),
 			By:  xmath.Rand(-1, 1, math.Sqrt)(2, 0),
 		},
@@ -77,13 +77,13 @@ func TestRNeuron_Train(t *testing.T) {
 			xmath.Vec(1).With(11),
 		)
 
-	rneuron := RNeuron(ml.TanH)(1, 5, net.Meta{})
+	rneuron := Neuron(ml.TanH)(1, 5, net.Meta{})
 
 	params := &Parameters{
 		Weights: Weights{
-			Whh: xmath.Mat(5).Rows(5, xmath.Rand(-1, 1, math.Sqrt)), // interlayer
-			Wxh: xmath.Mat(5).Rows(1, xmath.Rand(-1, 1, math.Sqrt)), // trainInput
-			Why: xmath.Mat(1).Rows(5, xmath.Rand(-1, 1, math.Sqrt)), // trainOutput
+			Whh: xmath.Mat(5).Generate(5, xmath.Rand(-1, 1, math.Sqrt)), // interlayer
+			Wxh: xmath.Mat(5).Generate(1, xmath.Rand(-1, 1, math.Sqrt)), // trainInput
+			Why: xmath.Mat(1).Generate(5, xmath.Rand(-1, 1, math.Sqrt)), // trainOutput
 			Bh:  xmath.Rand(-0.1, 0.1, math.Sqrt)(5, 0),
 			By:  xmath.Rand(-0.1, 0.1, math.Sqrt)(1, 0),
 		},

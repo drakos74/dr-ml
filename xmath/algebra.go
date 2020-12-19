@@ -155,6 +155,11 @@ func (v Vector) With(w ...float64) Vector {
 	return v
 }
 
+// Generate generates values for the vector
+func (v Vector) Generate(gen VectorGenerator) Vector {
+	return gen(len(v), 0)
+}
+
 // Dot returns the dot product of the 2 vectors
 func (v Vector) Dot(w Vector) float64 {
 	MustHaveSameSize(v, w)
@@ -165,7 +170,8 @@ func (v Vector) Dot(w Vector) float64 {
 	return p
 }
 
-// ProdH returns the product of the given vectors
+// Prod returns the product of the given vectors
+// it returns a matrix
 func (v Vector) Prod(w Vector) Matrix {
 	z := Mat(len(v)).Of(len(w))
 	for i := 0; i < len(v); i++ {
@@ -176,14 +182,21 @@ func (v Vector) Prod(w Vector) Matrix {
 	return z
 }
 
-// ProdH returns the hadamard product of the given vectors
-func (v Vector) ProdH(w Vector) Vector {
+// X returns the hadamard product of the given vectors.
+// e.g. pointwise multiplication
+func (v Vector) X(w Vector) Vector {
 	MustHaveSameSize(v, w)
 	z := Vec(len(v))
 	for i := 0; i < len(v); i++ {
 		z[i] = v[i] * w[i]
 	}
 	return z
+}
+
+// Stack concatenates 2 vectors , producing another with the sum of their lengths.
+func (v Vector) Stack(w Vector) Vector {
+	x := Vec(len(v) + len(w))
+	return x.With(append(v, w...)...)
 }
 
 // Add adds 2 vectors
@@ -455,8 +468,8 @@ func (m Matrix) With(v ...Vector) Matrix {
 	return m
 }
 
-// Rows generates the rows of the matrix using the generator func
-func (m Matrix) Rows(p int, gen VectorGenerator) Matrix {
+// Generate generates the rows of the matrix using the generator func
+func (m Matrix) Generate(p int, gen VectorGenerator) Matrix {
 	for i := range m {
 		m[i] = gen(p, i)
 	}

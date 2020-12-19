@@ -67,7 +67,7 @@ func (net *Network) InitWeights(weightGenerator xmath.ScaledVectorGenerator, cli
 	if net.Layer != nil {
 		panic("rnn layer already initialised")
 	}
-	net.Layer = NewRNNLayer(
+	net.Layer = NewLayer(
 		net.n,
 		net.xDim,
 		net.hDim,
@@ -83,7 +83,7 @@ func (net *Network) Rate(rate float64) *Network {
 }
 
 func (net *Network) Activation(activation ml.Activation) *Network {
-	net.neuronFactory = RNeuron(activation)
+	net.neuronFactory = Neuron(activation)
 	return net
 }
 
