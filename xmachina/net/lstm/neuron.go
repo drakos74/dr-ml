@@ -1,88 +1,143 @@
 package lstm
 
 import (
+	"fmt"
+
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/rs/zerolog/log"
 )
 
-type state struct {
-	h xmath.Vector
-	s xmath.Vector
+type neuron struct {
+	input      net.Neuron
+	hidden     net.Neuron
+	activation net.Neuron
+	output     net.Neuron
+	meta       net.Meta
 }
 
-type cell struct {
-	forget     net.ActivationCell
-	input      net.ActivationCell
-	activation net.ActivationCell
-	output     net.ActivationCell
-	hidden     net.ActivationCell
-
-	net.Meta
-	state
+// NeuronBuilder holds all neuron properties needed to construct the neuron.
+type NeuronBuilder struct {
+	x, y, h                        int
+	g1, g2                         ml.Activation
+	rate                           ml.Learning
+	weightGenerator, biasGenerator xmath.VectorGenerator
 }
 
-// NeuronFactory is a factory for construction of a recursive neuronFactory within the context of a recursive layer / network
-type NeuronFactory func(p, n int, meta net.Meta) *neuron
-
-// Neuron is the neuronFactory implementation for a recursive neural network.
-var Neuron = func(activation ml.Activation) NeuronFactory {
-	return func(p, n int, meta net.Meta) *neuron {
-		return nil
+// NewNeuronBuilder creates a new neuron builder.
+func NewNeuronBuilder(x, y, h int) *NeuronBuilder {
+	return &NeuronBuilder{
+		x: x,
+		y: y,
+		h: h,
 	}
 }
 
-func (rn *cell) forward(x xmath.Vector, prev state) (s, h xmath.Vector) {
-	// stack the input and previous hidden state to compound them together
-	v := x.Stack(prev.h)
+// WithActivation defines the activation functions for the rnn neuron.
+func (nb *NeuronBuilder) WithActivation(g1, g2 ml.Activation) *NeuronBuilder {
+	nb.g1 = g1
+	nb.g2 = g2
+	return nb
+}
 
-	// forget gate
-	f := rn.forget.Fwd(v)
-	// input gate
-	i := rn.input.Fwd(v)
-	// activation gate
-	g := rn.activation.Fwd(v)
-	// output gate
-	o := rn.output.Fwd(v)
-	// state
-	s = rn.hidden.Fwd(i.X(g).Add(prev.s.X(f)))
+// WithWeights defines the weight generator functions for the rnn neuron.
+func (nb *NeuronBuilder) WithWeights(weightGenerator, biasGenerator xmath.VectorGenerator) *NeuronBuilder {
+	nb.weightGenerator = weightGenerator
+	nb.biasGenerator = biasGenerator
+	return nb
+}
+
+// WithRate defines the learning rate for the rnn neuron.
+func (nb *NeuronBuilder) WithRate(learning ml.Learning) *NeuronBuilder {
+	nb.rate = learning
+	return nb
+}
+
+// NeuronFactory is a factory for construction of a recursive neuronFactory within the context of a recursive layer / network
+type NeuronFactory func(meta net.Meta) *neuron
+
+// Neuron is the neuronFactory implementation for a recursive neural network.
+var Neuron = func(builder NeuronBuilder) NeuronFactory {
+	wxh := net.NewWeights(builder.x, builder.h, builder.weightGenerator, xmath.VoidVector)
+	whh := net.NewWeights(builder.h, builder.h, builder.weightGenerator, xmath.VoidVector)
+	why := net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator)
+	wyy := net.NewWeights(builder.h, builder.y, builder.weightGenerator, builder.biasGenerator)
+	return func(meta net.Meta) *neuron {
+		return &neuron{
+			input:      net.NewWeightCell(builder.x, builder.h, *ml.Base().WithRate(&builder.rate), wxh, meta.WithID("input")),
+			hidden:     net.NewWeightCell(builder.h, builder.h, *ml.Base().WithRate(&builder.rate), whh, meta.WithID("hidden")),
+			activation: net.NewActivationCell(builder.h, builder.h, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g1), why, meta.WithID("activation")),
+			output:     net.NewWeightCell(builder.h, builder.y, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g2), wyy, meta.WithID("output")),
+			meta:       meta,
+		}
+	}
+}
+
+func (rn *neuron) forward(x, prev_h xmath.Vector) (y, next_h xmath.Vector) {
+	// apply internal state weights
+	wx := rn.input.Fwd(x)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("wx", wx).
+		Msg("wx")
+	wh := rn.hidden.Fwd(prev_h)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("wh", wh).
+		Msg("wh")
+	w := wx.Add(wh)
+	// apply activation
+	next_h = rn.activation.Fwd(w)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("h", next_h).
+		Msg("next")
+	// compute output
+	y = rn.output.Fwd(next_h)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("y", y).
+		Msg("output")
+	return y, next_h
+}
+
+func (rn *neuron) backward(dy, dh xmath.Vector) (x, h xmath.Vector) {
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dy", dy).
+		Floats64("dh", dh).
+		Msg("error")
+	// we need to trace our  steps back ...
+	dh = dh.Add(rn.output.Bwd(dy))
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dh", dh).
+		Msg("dh")
+	dh.Check()
+
+	// de-activation
+	dW := rn.activation.Bwd(dh)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dW", dW).
+		Msg("dW")
+	dW.Check()
+
 	// hidden state
-	h = o.X(s)
+	dWh := rn.hidden.Bwd(dW)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dWh", dWh).
+		Msg("dWh")
+	dWh.Check()
 
-	rn.state.h = h
-	rn.state.s = s
+	dWx := rn.input.Bwd(dW)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dWx", dWx).
+		Msg("dWx")
+	dWx.Check()
 
-	return s, h
-}
-
-func (rn *cell) backward(y, dNext state) (h xmath.Vector, dWhy, dWxh, dWhh xmath.Matrix) {
-
-	//ds := rn.output.grad(dNext.h).Add(dNext.s)
-	//do := rn.hidden.grad(dNext.h)
-	//di := rn.activation.grad(ds)
-	//dg := rn.input.grad(ds)
-	//df := rn.state.s.X(ds)
-
-	return h, dWhy, dWxh, dWhh
-}
-
-type neuron struct {
-	act     ml.Activation
-	weights xmath.Matrix
-	bias    xmath.Vector
-	output  xmath.Vector
-}
-
-func (n *neuron) forward(x xmath.Vector) xmath.Vector {
-	w := n.weights.Prod(x).Add(n.bias)
-	n.output = w.Op(n.act.F)
-	return n.output
-}
-
-func (n *neuron) grad(d xmath.Vector) xmath.Vector {
-	return n.output.X(d)
-}
-
-func (n *neuron) backward(x, y xmath.Vector) xmath.Vector {
-	return nil
+	return dWx, dWh
 }

@@ -21,14 +21,20 @@ type Clip struct {
 	W, B float64
 }
 
-//// Weights returns the layer weights.
-//func (r *Layer) Weights() Weights {
-//	return r.Parameters.Weights
-//}
+// Weights returns the layer weights.
+func (r *Layer) Size() (n, x, h int) {
+	return len(r.neurons), r.xDim, r.hDim
+}
 
-// Size returns the number of recurrent neurons in the layer.
-func (r *Layer) Size() int {
-	return len(r.neurons)
+// Weights returns the layer weights.
+func (r *Layer) Weights() map[net.Meta]net.Weights {
+	weights := make(map[net.Meta]net.Weights)
+	neuron := r.neurons[0]
+	weights[neuron.input.Meta()] = *neuron.input.Weights()
+	weights[neuron.hidden.Meta()] = *neuron.input.Weights()
+	weights[neuron.activation.Meta()] = *neuron.input.Weights()
+	weights[neuron.output.Meta()] = *neuron.input.Weights()
+	return weights
 }
 
 // NewLayer creates a new Recurrent layer

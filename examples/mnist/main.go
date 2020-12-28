@@ -34,20 +34,6 @@ func main() {
 
 	start := time.Now()
 
-	// optional profiling block
-	//f, err := os.Create("examples/mnist-sigmoid/profile")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//pprof.StartCPUProfile(f)
-	//defer pprof.StopCPUProfile()
-
-	// build the network
-
-	// sigmoid
-	//network := net.XNew(784, 10).
-	//	Add(200, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt))).
-	//	Add(10, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt)))
 	// tanh with softmax
 	network := ff.New(784, 10).
 		Add(200, net.NewBuilder().
@@ -62,13 +48,10 @@ func main() {
 				WithActivation(ml.TanH)).
 			WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).
 			Factory(net.NewActivationCell)).
-		AddSoftMax()
-	// ReLU
-	//network := ff.XNew(784, 10).
-	//	Add(200, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.ReLU), xmath.Rand(-1, 1, math.Sqrt))).
-	//	//note : we should not use ReLU in the output layer
-	//	Add(10, ff.Perceptron(ml.Model().Rate(0.1, 0).WithActivation(ml.TanH), xmath.Rand(-1, 1, math.Sqrt))).
-	//	AddSoftMax()
+		Add(10, net.NewBuilder().
+			WithModule(ml.Base().
+				WithActivation(ml.Void{})).
+			Factory(net.NewSoftCell))
 
 	data := make(xmachina.Data)
 

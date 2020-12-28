@@ -56,3 +56,15 @@ type Layer interface {
 	// Size returns the Size of the layer e.g. number of neurons
 	Size() (int, int)
 }
+
+// RecurrentLayer is the generic layer interface for an ml recurrent network.
+type RecurrentLayer interface {
+	// F will take the input from the previous layer and generate an input for the next layer
+	Forward(v xmath.Matrix) xmath.Matrix
+	// Backward will take the loss from next layer and generate a loss for the previous layer
+	Backward(dv xmath.Matrix) xmath.Matrix
+	// Weights returns the current weight matrix for the layer
+	Weights() map[Meta]Weights
+	// Size returns the Size of the layer e.g. number of neurons
+	Size() (n, x, h int)
+}

@@ -15,8 +15,10 @@ import (
 )
 
 const (
-	sin   = "sin"
-	train = "train"
+	sin    = "sin"
+	train  = "train"
+	dummy  = "dummy"
+	evolve = "evolve"
 )
 
 func init() {
@@ -37,7 +39,10 @@ func main() {
 		WithWeights(xmath.RangeSqrt(-1, 1)(hiddenLayerSize), xmath.RangeSqrt(-1, 1)(hiddenLayerSize)).
 		WithActivation(ml.TanH, ml.Sigmoid)
 
-	network := rnn.New(bufferSize, builder, rnn.Clip{5, 5})
+	network := rnn.New(bufferSize, builder, rnn.Clip{1, 1})
+	network_dummy := rnn.New(bufferSize, builder, rnn.Clip{1, 1})
+	network_evolve := rnn.New(bufferSize, builder, rnn.Clip{1, 1})
+
 	//InitWeights(xmath.Range(0, 1))
 
 	//if err == nil && weights != nil {
@@ -57,25 +62,36 @@ func main() {
 
 	rnn.NewSeries(sin, "x", "y")
 	rnn.NewSeries(train, "x", "y")
+	rnn.NewSeries(dummy, "x", "y")
+	rnn.NewSeries(evolve, "x", "y")
 
 	xx := make([]float64, 0)
 	l := 3000
+	var lastOutput float64
 	for i := 0; i < l; i++ {
 
 		x := f * float64(i)
 		y := evolveSine(i, x)
+		//y := evolveSineVar(i, x)
 
 		if i < l*3/5 {
 			rnn.Add(sin, x, y)
 			loss, _ := network.Train(xmath.Vec(1).With(y))
+			network_evolve.Train(xmath.Vec(1).With(y))
 			println(fmt.Sprintf("loss = %v", loss.Sum()))
 			rnn.Add(train, x, network.TmpOutput[len(network.TmpOutput)-1])
+			rnn.Add(evolve, x, network_evolve.TmpOutput[len(network_evolve.TmpOutput)-1])
 			xx = append(xx, x)
 			//save(weights)
 		} else {
 			output := network.Predict(xmath.Vec(1).With(y))
 			rnn.Add(train, x, output[0])
+			evolveOutput := network_evolve.Predict(xmath.Vec(1).With(lastOutput))
+			lastOutput = evolveOutput[0]
+			rnn.Add(evolve, x, evolveOutput[0])
 		}
+		dummyOutput := network_dummy.Predict(xmath.Vec(1).With(y))
+		rnn.Add(dummy, x, dummyOutput[0])
 
 	}
 
@@ -91,8 +107,7 @@ func evolveSine(i int, x float64) float64 {
 // evolveSineVar reveals the shortcomings of an RNN,
 // not being able to capture variations in period.
 func evolveSineVar(i int, x float64) float64 {
-	twist := float64(i) / float64(100)
-	return 10*math.Sin(x) + twist
+	return 0.3*math.Sin(x) + 0.3*math.Sin(2*x) + 0.3*math.Sin(5*x)
 }
 
 const fileName = "examples/rnn-sine/data/results.json"
