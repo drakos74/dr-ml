@@ -50,8 +50,18 @@ func main() {
 	//	Add(10, net.Perceptron(ml.Model().Rate(0.1, 0), xmath.Rand(-1, 1, math.Sqrt)))
 	// tanh with softmax
 	network := ff.New(784, 10).
-		Add(200, net.NewBuilder().WithModule(ml.Base().WithRate(ml.Learn(0.1, 0)).WithActivation(ml.TanH)).WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).Factory()).
-		Add(10, net.NewBuilder().WithModule(ml.Base().WithRate(ml.Learn(0.1, 0)).WithActivation(ml.TanH)).WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).Factory()).
+		Add(200, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(0.1, 0)).
+				WithActivation(ml.TanH)).
+			WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).
+			Factory(net.NewActivationCell)).
+		Add(10, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(0.1, 0)).
+				WithActivation(ml.TanH)).
+			WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).
+			Factory(net.NewActivationCell)).
 		AddSoftMax()
 	// ReLU
 	//network := ff.XNew(784, 10).
