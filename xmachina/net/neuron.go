@@ -150,30 +150,14 @@ func (n *SoftCell) Fwd(v xmath.Vector) xmath.Vector {
 	xmath.MustHaveSameSize(v, n.input)
 	// keep a copy of the input in memory
 	n.input = v
-	// combine with the weights
-	w := n.weights.W.Prod(v)
-	// add bias
-	z := w.Add(n.weights.B)
-	// apply activation
-	n.output = n.softmax.F(z)
+	n.output = n.softmax.F(v)
 	return n.output
 }
 
 // Bwd applies the backward propagation logic for the neuron,
 // while it also updates the weights and biases accordingly.
 func (n *SoftCell) Bwd(diff xmath.Vector) xmath.Vector {
-	// compute loss for previous layer
-	loss := n.weights.W.T().Prod(diff)
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", n.meta)).
-		Floats64("loss", loss).
-		Msg("loss")
-	// update weights and bias
-	dW := diff.Prod(n.input)
-	n.weights.W = n.weights.W.Add(dW.Mult(n.learning.WRate()))
-	n.weights.B = n.weights.B.Add(diff.Mult(n.learning.BRate()))
-	// return the loss to the previous layer
-	return loss
+	return n.softmax.D(n.output).Prod(diff)
 }
 
 // Meta returns the metadata for the neuron.

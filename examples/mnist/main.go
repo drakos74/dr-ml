@@ -48,10 +48,7 @@ func main() {
 				WithActivation(ml.TanH)).
 			WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).
 			Factory(net.NewActivationCell)).
-		Add(10, net.NewBuilder().
-			WithModule(ml.Base().
-				WithActivation(ml.Void{})).
-			Factory(net.NewSoftCell))
+		Add(10, net.NewBuilder().Factory(net.NewSoftCell))
 
 	data := make(xmachina.Data)
 

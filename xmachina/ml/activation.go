@@ -1,7 +1,6 @@
 package ml
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/drakos74/go-ex-machina/xmath"
@@ -133,9 +132,7 @@ func (sm SoftMax) F(v xmath.Vector) xmath.Vector {
 
 // D returns the derivative of the activation function.
 func (sm SoftMax) D(s xmath.Vector) xmath.Matrix {
-
 	jacobian := xmath.Diag(s)
-	println(fmt.Sprintf("jacobian = %v", jacobian))
 	for i := range jacobian {
 		for j := range jacobian[i] {
 			if i == j {
@@ -145,6 +142,5 @@ func (sm SoftMax) D(s xmath.Vector) xmath.Matrix {
 			}
 		}
 	}
-
 	return jacobian
 }
