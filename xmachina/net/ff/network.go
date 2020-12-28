@@ -10,7 +10,7 @@ type Network struct {
 	net.Info
 	net.Config
 	loss   ml.Loss
-	layers []net.FFLayer
+	layers []net.Layer
 }
 
 func New(inputSize, outputSize int) *Network {
@@ -19,7 +19,7 @@ func New(inputSize, outputSize int) *Network {
 			InputSize:  inputSize,
 			OutputSize: outputSize,
 		},
-		layers: make([]net.FFLayer, 0),
+		layers: make([]net.Layer, 0),
 		loss:   ml.Diff,
 	}
 }
@@ -28,17 +28,17 @@ func (n *Network) Loss(loss ml.Loss) {
 	n.loss = loss
 }
 
-func (n *Network) Add(s int, factory NeuronFactory) *Network {
+func (n *Network) Add(s int, factory net.NeuronFactory) *Network {
 
-	ps := n.InputSize
+	p := n.InputSize
 
 	ls := len(n.layers)
 	if ls > 0 {
 		// check previous layer size
-		ps = n.layers[ls-1].Size()
+		_, p = n.layers[ls-1].Size()
 	}
 
-	n.layers = append(n.layers, NewLayer(ps, s, factory, len(n.layers)))
+	n.layers = append(n.layers, NewLayer(p, s, factory, len(n.layers)))
 	return n
 }
 
@@ -49,7 +49,7 @@ func (n *Network) AddSoftMax() *Network {
 	ls := len(n.layers)
 	if ls > 0 {
 		// check previous layer size
-		ps = n.layers[ls-1].Size()
+		_, ps = n.layers[ls-1].Size()
 	}
 
 	n.layers = append(n.layers, NewSMLayer(ps, len(n.layers)))
@@ -72,7 +72,7 @@ func (n *Network) backward(err xmath.Vector) {
 
 }
 
-func (n *Network) Train(input xmath.Vector, expected xmath.Vector) (err xmath.Vector, weights xmath.Cube) {
+func (n *Network) Train(input xmath.Vector, expected xmath.Vector) (err xmath.Vector, weights []net.Weights) {
 
 	out := n.forward(input)
 
@@ -90,7 +90,7 @@ func (n *Network) Train(input xmath.Vector, expected xmath.Vector) (err xmath.Ve
 	n.Iterations++
 
 	if n.HasTraceEnabled() {
-		weights = xmath.Cub(len(n.layers))
+		weights = make([]net.Weights, len(n.layers))
 		for i := 0; i < len(n.layers); i++ {
 			layer := n.layers[i]
 			m := layer.Weights()
@@ -121,14 +121,14 @@ func XNew(inputSize, outputSize int) *XNetwork {
 
 func (xn *XNetwork) Add(s int, factory NeuronFactory) *XNetwork {
 
-	ps := xn.InputSize
+	p := xn.InputSize
 
 	ls := len(xn.layers)
 	if ls > 0 {
 		// check previous layer size
-		ps = xn.layers[ls-1].Size()
+		_, p = xn.layers[ls-1].Size()
 	}
 
-	xn.layers = append(xn.layers, newXLayer(ps, s, factory, len(xn.layers)))
+	xn.layers = append(xn.layers, newXLayer(p, s, factory, len(xn.layers)))
 	return xn
 }

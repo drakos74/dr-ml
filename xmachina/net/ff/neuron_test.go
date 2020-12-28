@@ -5,6 +5,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/rs/zerolog"
+
 	"github.com/drakos74/go-ex-machina/xmath"
 
 	"github.com/drakos74/go-ex-machina/xmachina/net"
@@ -13,9 +15,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+}
+
 func TestNeuron_SimpleForward(t *testing.T) {
 
-	module := ml.Model()
+	module := ml.Base()
 
 	neuron := Perceptron(module, xmath.Const(0.5))(2, net.Meta{})
 
@@ -28,7 +34,7 @@ func TestNeuron_SimpleForward(t *testing.T) {
 
 func TestNeuron_SimpleForward_NegWeights(t *testing.T) {
 
-	module := ml.Model()
+	module := ml.Base()
 
 	neuron := Perceptron(module, xmath.Const(-0.5))(2, net.Meta{})
 
@@ -41,7 +47,7 @@ func TestNeuron_SimpleForward_NegWeights(t *testing.T) {
 
 func TestNeuron_ZeroErrorBackward(t *testing.T) {
 
-	module := ml.Model()
+	module := ml.Base()
 
 	weights := xmath.Const(0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
@@ -57,7 +63,7 @@ func TestNeuron_ZeroErrorBackward(t *testing.T) {
 
 func TestNeuron_GreaterErrorBackward(t *testing.T) {
 
-	module := ml.Model()
+	module := ml.Base()
 
 	weights := xmath.Const(0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
@@ -81,7 +87,7 @@ func TestNeuron_GreaterErrorBackward(t *testing.T) {
 
 func TestNeuron_GreaterErrorBackward_NegWeights(t *testing.T) {
 
-	module := ml.Model()
+	module := ml.Base()
 
 	weights := xmath.Const(-0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
@@ -105,7 +111,7 @@ func TestNeuron_GreaterErrorBackward_NegWeights(t *testing.T) {
 
 func TestNeuron_SmallerErrorBackward(t *testing.T) {
 
-	module := ml.Model().Rate(10, 0.05)
+	module := ml.Base().WithRate(ml.Learn(10, 0.05))
 
 	weights := xmath.Const(0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
@@ -129,7 +135,7 @@ func TestNeuron_SmallerErrorBackward(t *testing.T) {
 
 func TestNeuron_BinaryClassification(t *testing.T) {
 
-	module := ml.Model()
+	module := ml.Base()
 
 	weights := xmath.Const(0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
@@ -176,7 +182,7 @@ func TestNeuron_BinaryClassification(t *testing.T) {
 
 func TestNeuron_SigmoidActivationLimit(t *testing.T) {
 
-	module := ml.Model()
+	module := ml.Base()
 
 	neuron := Perceptron(module, xmath.Const(-0.5))(2, net.Meta{})
 

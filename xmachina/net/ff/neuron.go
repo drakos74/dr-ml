@@ -72,13 +72,16 @@ func (xn *xNeuron) init() *xNeuron {
 	return xn
 }
 
+// TODO : the below are helper functions for the xNeuron and xNetwork implementation
+// at some point they should be unified with the rest.
+
 // NeuronFactory is a factory for construction of neuron within the context of a neuron layer / network
 type NeuronFactory func(p int, meta net.Meta) *Neuron
 
-var Perceptron = func(module ml.Module, weights xmath.VectorGenerator) NeuronFactory {
+var Perceptron = func(module *ml.Module, weights xmath.VectorGenerator) NeuronFactory {
 	return func(p int, meta net.Meta) *Neuron {
 		return &Neuron{
-			Module: module,
+			Module: *module,
 			memory: memory{
 				input: xmath.Vec(p),
 			},

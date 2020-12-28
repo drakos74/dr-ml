@@ -21,7 +21,6 @@ func TestSigmoid_Function(t *testing.T) {
 		y := s.F(x)
 		log.Println(fmt.Sprintf("x = %v -> y = %v", x, y))
 	}
-
 }
 
 func TestSigmoid_Derivative(t *testing.T) {
@@ -42,7 +41,6 @@ func TestSigmoid_Derivative(t *testing.T) {
 		x0 = x
 		y0 = y
 	}
-
 }
 
 func TestTanH_Function(t *testing.T) {
@@ -54,7 +52,6 @@ func TestTanH_Function(t *testing.T) {
 		y := tan.F(x)
 		log.Println(fmt.Sprintf("x = %v -> y = %v", x, y))
 	}
-
 }
 
 func TestTanH_Derivative(t *testing.T) {
@@ -84,35 +81,28 @@ func TestSoftMax_Function(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		v := xmath.Rand(0, 10, xmath.Unit)(100, 0)
-
 		w := softmax.F(v)
-
 		assert.Equal(t, "1.00", strconv.FormatFloat(w.Sum(), 'f', 2, 64))
-
 	}
-
 }
 
+// numbers taken from https://aerinykim.medium.com/how-to-implement-the-softmax-derivative-independently-from-any-loss-function-ae6d44363a9d
 func TestSoftMax_Derivative(t *testing.T) {
 
 	softmax := SoftMax{}
 
-	v := xmath.Vec(3).With(10, 20, 5)
+	x0 := xmath.Vec(2).With(1, 2)
+	println(fmt.Sprintf("x0 = %v", x0))
+	y0 := softmax.F(x0)
+	println(fmt.Sprintf("y0 = %v", y0))
 
-	w := softmax.F(v)
+	// check that softmax sum is 1.
+	assert.True(t, math.Abs(1-y0.Sum()) < 0.01)
 
-	println(fmt.Sprintf("w = %v", w))
+	div := softmax.D(y0)
+	assert.Equal(t, xmath.Mat(2).With(
+		xmath.Vec(2).With(0.19661193, -0.19661193),
+		xmath.Vec(2).With(-0.19661193, 0.19661193),
+	), div.Op(xmath.Round(8)))
 
-	r := xmath.Vec(3).With(0.3, 0.3, 0.4)
-
-	diff := Diff(r, w)
-	println(fmt.Sprintf("diff = %v", diff))
-
-	println(fmt.Sprintf("diff.Sum() = %v", diff.Sum()))
-
-	err := softmax.D(diff)
-
-	println(fmt.Sprintf("err = %v", err))
-
-	println(fmt.Sprintf("errSum = %v", err.T().Sum()))
 }

@@ -1,82 +1,143 @@
 package rnn
 
 import (
+	"fmt"
+
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/rs/zerolog/log"
 )
 
-type state struct {
-	x xmath.Vector
-	h xmath.Vector
-	y xmath.Vector
+type neuron struct {
+	input      net.Neuron
+	hidden     net.Neuron
+	activation net.Neuron
+	output     net.Neuron
+	meta       net.Meta
 }
 
-type neuron struct {
-	ml.Activation
-	net.Meta
-	state
+// NeuronBuilder holds all neuron properties needed to construct the neuron.
+type NeuronBuilder struct {
+	x, y, h                        int
+	g1, g2                         ml.Activation
+	rate                           ml.Learning
+	weightGenerator, biasGenerator xmath.VectorGenerator
+}
+
+// NewNeuronBuilder creates a new neuron builder.
+func NewNeuronBuilder(x, y, h int) *NeuronBuilder {
+	return &NeuronBuilder{
+		x: x,
+		y: y,
+		h: h,
+	}
+}
+
+// WithActivation defines the activation functions for the rnn neuron.
+func (nb *NeuronBuilder) WithActivation(g1, g2 ml.Activation) *NeuronBuilder {
+	nb.g1 = g1
+	nb.g2 = g2
+	return nb
+}
+
+// WithWeights defines the weight generator functions for the rnn neuron.
+func (nb *NeuronBuilder) WithWeights(weightGenerator, biasGenerator xmath.VectorGenerator) *NeuronBuilder {
+	nb.weightGenerator = weightGenerator
+	nb.biasGenerator = biasGenerator
+	return nb
+}
+
+// WithRate defines the learning rate for the rnn neuron.
+func (nb *NeuronBuilder) WithRate(learning ml.Learning) *NeuronBuilder {
+	nb.rate = learning
+	return nb
 }
 
 // NeuronFactory is a factory for construction of a recursive neuronFactory within the context of a recursive layer / network
-type NeuronFactory func(p, n int, meta net.Meta) *neuron
+type NeuronFactory func(meta net.Meta) *neuron
 
 // Neuron is the neuronFactory implementation for a recursive neural network.
-var Neuron = func(activation ml.Activation) NeuronFactory {
-	return func(p, n int, meta net.Meta) *neuron {
+var Neuron = func(builder NeuronBuilder) NeuronFactory {
+	wxh := net.NewW(builder.x, builder.h, builder.weightGenerator)
+	whh := net.NewW(builder.h, builder.h, builder.weightGenerator)
+	why := net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator)
+	wyy := net.NewWeights(builder.h, builder.y, builder.weightGenerator, builder.biasGenerator)
+	return func(meta net.Meta) *neuron {
 		return &neuron{
-			Activation: activation,
-			state: state{
-				x: xmath.Vec(p),
-				h: xmath.Vec(n),
-				y: xmath.Vec(n),
-			},
-			Meta: meta,
+			input:      net.NewWeightCell(builder.x, builder.h, *ml.Base().WithRate(&builder.rate), wxh, meta.WithID("input")),
+			hidden:     net.NewWeightCell(builder.h, builder.h, *ml.Base().WithRate(&builder.rate), whh, meta.WithID("hidden")),
+			activation: net.NewActivationCell(builder.h, builder.h, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g1), why, meta.WithID("activation")),
+			output:     net.NewActivationCell(builder.h, builder.y, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g2), wyy, meta.WithID("output")),
+			meta:       meta,
 		}
 	}
 }
 
-func (rn *neuron) forward(x, h xmath.Vector, weights *Weights) (y, wh xmath.Vector) {
-	xmath.MustHaveSameSize(x, rn.x)
-	// keep the input state in memory for backpropagation
-	rn.x = x
+func (rn *neuron) forward(x, prev_h xmath.Vector) (y, next_h xmath.Vector) {
 	// apply internal state weights
-	wxh := weights.Wxh.Prod(x)
-	whh := weights.Whh.Prod(h)
-	rn.h = wxh.
-		Add(whh).
-		Add(weights.Bh)
-	// apply activation
-	rn.h = rn.h.Op(rn.F)
-
-	// compute output
-	xhy := weights.Why.Prod(rn.h)
-	rn.y = xhy.Add(weights.By)
-
+	wx := rn.input.Fwd(x)
 	log.Trace().
-		Floats64("input", rn.x).
-		Floats64("h-in", h).
-		Floats64("h-out", rn.h).
-		Floats64("output", rn.y).
-		Msg("neuronFactory forward")
-	return rn.y, rn.h
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("wx", wx).
+		Msg("wx")
+	wh := rn.hidden.Fwd(prev_h)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("wh", wh).
+		Msg("wh")
+	w := wx.Add(wh)
+	// apply activation
+	next_h = rn.activation.Fwd(w)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("h", next_h).
+		Msg("next")
+	// compute output
+	y = rn.output.Fwd(next_h)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("y", y).
+		Msg("output")
+	return y, next_h
 }
 
-func (rn *neuron) backward(dy, u xmath.Vector, params *Parameters) (h xmath.Vector, dWhy, dWxh, dWhh xmath.Matrix) {
-
+func (rn *neuron) backward(dy, dh xmath.Vector) (x, h xmath.Vector) {
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dy", dy).
+		Floats64("dh", dh).
+		Msg("error")
 	// we need to trace our  steps back ...
-	dWhy = dy.Prod(rn.h)
+	dh = dh.Add(rn.output.Bwd(dy))
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dh", dh).
+		Msg("dh")
+	dh.Check()
 
-	// delta
-	dh := params.Why.T().Prod(dy)
-	dh = dh.Add(u)
 	// de-activation
-	h = dh.X(rn.h.Op(rn.D))
+	dW := rn.activation.Bwd(dh)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dW", dW).
+		Msg("dW")
+	dW.Check()
 
-	dWxh = dh.Prod(rn.x)
+	// hidden state
+	dWh := rn.hidden.Bwd(dW)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dWh", dWh).
+		Msg("dWh")
+	dWh.Check()
 
-	dWhh = dh.Prod(u)
+	dWx := rn.input.Bwd(dW)
+	log.Trace().
+		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Floats64("dWx", dWx).
+		Msg("dWx")
+	dWx.Check()
 
-	return h, dWhy, dWxh, dWhh
+	return dWx, dWh
 }

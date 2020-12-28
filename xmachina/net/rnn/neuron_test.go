@@ -5,6 +5,10 @@ import (
 	"math"
 	"testing"
 
+	"github.com/rs/zerolog"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/drakos74/go-ex-machina/xmath"
 
 	"github.com/drakos74/go-ex-machina/xmachina/net"
@@ -12,102 +16,129 @@ import (
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 )
 
+func init() {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+}
+
 func TestRNeuron_DimensionsInForwardPass(t *testing.T) {
 
-	rNeuron := Neuron(ml.TanH)(3, 5, net.Meta{})
+	rNeuron := testNeuronFactory(3, 5, 10)(net.Meta{})
 
 	// trainInput layer size : 3
-	// trainOutput layer size : 2
-	// layer depth : 5
+	// trainOutput layer size : 5
+	// layer depth : 10
 
-	xt := xmath.Mat(10).Generate(3, xmath.Rand(-1, 1, math.Sqrt))
-	h0 := xmath.Mat(10).Generate(5, xmath.Rand(-1, 1, math.Sqrt))
+	sequenceLength := 10
 
-	params := &Parameters{
-		Weights: Weights{
-			Whh: xmath.Mat(5).Generate(5, xmath.Rand(-1, 1, math.Sqrt)),
-			Wxh: xmath.Mat(5).Generate(3, xmath.Rand(-1, 1, math.Sqrt)),
-			Why: xmath.Mat(2).Generate(5, xmath.Rand(-1, 1, math.Sqrt)),
-			Bh:  xmath.Rand(-1, 1, math.Sqrt)(5, 0),
-			By:  xmath.Rand(-1, 1, math.Sqrt)(2, 0),
-		},
-	}
+	xt := xmath.Mat(sequenceLength).Generate(3, xmath.Rand(-1, 1, math.Sqrt))
+	h0 := xmath.Mat(sequenceLength).Generate(10, xmath.Rand(-1, 1, math.Sqrt))
 
-	y := xmath.Mat(10)
-	wh := xmath.Mat(10)
+	y := xmath.Mat(sequenceLength)
+	wh := xmath.Mat(sequenceLength)
 
 	for i := 0; i < len(xt); i++ {
-		y[i], wh[i] = rNeuron.forward(xt[i], h0[i], &params.Weights)
+		y[i], wh[i] = rNeuron.forward(xt[i], h0[i])
+		assert.Equal(t, 5, len(y[i]))
+		assert.Equal(t, 10, len(wh[i]))
 	}
-
-	println(fmt.Sprintf("y = %v", y.T()))
-	println(fmt.Sprintf("wh = %v", wh.T()))
 
 }
 
-// TODO : fix this test
 func TestRNeuron_Train(t *testing.T) {
 
-	// normal increasing series
-	x := xmath.Mat(10).Of(1).
-		With(
-			xmath.Vec(1).With(1),
-			xmath.Vec(1).With(2),
-			xmath.Vec(1).With(3),
-			xmath.Vec(1).With(4),
-			xmath.Vec(1).With(5),
-			xmath.Vec(1).With(6),
-			xmath.Vec(1).With(7),
-			xmath.Vec(1).With(8),
-			xmath.Vec(1).With(9),
-			xmath.Vec(1).With(10),
-		)
+	type test struct {
+		inp, outp, hidden int
+		input, expected   xmath.Vector
+		iterations        int
+	}
 
-	e := xmath.Mat(10).Of(1).
-		With(
-			xmath.Vec(1).With(2),
-			xmath.Vec(1).With(3),
-			xmath.Vec(1).With(4),
-			xmath.Vec(1).With(5),
-			xmath.Vec(1).With(6),
-			xmath.Vec(1).With(7),
-			xmath.Vec(1).With(8),
-			xmath.Vec(1).With(9),
-			xmath.Vec(1).With(10),
-			xmath.Vec(1).With(11),
-		)
-
-	rneuron := Neuron(ml.TanH)(1, 5, net.Meta{})
-
-	params := &Parameters{
-		Weights: Weights{
-			Whh: xmath.Mat(5).Generate(5, xmath.Rand(-1, 1, math.Sqrt)), // interlayer
-			Wxh: xmath.Mat(5).Generate(1, xmath.Rand(-1, 1, math.Sqrt)), // trainInput
-			Why: xmath.Mat(1).Generate(5, xmath.Rand(-1, 1, math.Sqrt)), // trainOutput
-			Bh:  xmath.Rand(-0.1, 0.1, math.Sqrt)(5, 0),
-			By:  xmath.Rand(-0.1, 0.1, math.Sqrt)(1, 0),
+	tests := map[string]test{
+		"increasing-sequence": {
+			inp:        5,
+			outp:       5,
+			hidden:     10,
+			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
+			expected:   xmath.Vec(5).With(0.2, 0.3, 0.4, 0.5, 0.6),
+			iterations: 30,
+		},
+		"decreasing-sequence": {
+			inp:        5,
+			outp:       5,
+			hidden:     10,
+			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
+			expected:   xmath.Vec(5).With(0.9, 0.8, 0.7, 0.6, 0.5),
+			iterations: 50,
+		},
+		"iterating-sequence": {
+			inp:        5,
+			outp:       5,
+			hidden:     10,
+			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
+			expected:   xmath.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
+			iterations: 50,
+		},
+		"event-trigger-thin": {
+			inp:        5,
+			outp:       5,
+			hidden:     10,
+			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
+			expected:   xmath.Vec(5).With(0.1, 0.1, 0.9, 0.1, 0.1),
+			iterations: 60,
+		},
+		"event-trigger-thick": {
+			inp:        5,
+			outp:       5,
+			hidden:     100,
+			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
+			expected:   xmath.Vec(5).With(0.1, 0.1, 0.9, 0.1, 0.1),
+			iterations: 7,
 		},
 	}
 
-	h := xmath.Vec(5)
-
-	o := xmath.Mat(10)
-	wh := xmath.Mat(10)
-
-	err := xmath.Mat(10)
-
-	for i := 0; i < len(x); i++ {
-		o[i], h = rneuron.forward(x[i], h, &params.Weights)
-		wh[i] = h
-		err[i] = ml.CrossEntropy(e[i], o[i])
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			trainNeuron(t, tt.inp, tt.outp, tt.hidden, tt.input, tt.expected, tt.iterations)
+		})
 	}
 
-	// do the backward pass
-	for i := len(x) - 1; i >= 0; i-- {
-		//rneuron.backward(err[i])
+}
+
+func trainNeuron(t *testing.T, inp, outp, hidden int, input, expected xmath.Vector, iterations int) {
+
+	rneuron := testNeuronFactory(inp, outp, hidden)(net.Meta{})
+
+	y := xmath.Vec(outp)
+	h := xmath.Vec(hidden)
+	err := xmath.Vec(outp)
+
+	var loss float64
+	for i := 0; i < iterations; i++ {
+		y, h = rneuron.forward(input, h)
+		err = ml.Diff(expected, y)
+		newLoss := err.Op(math.Abs).Sum()
+		if i > 0 {
+			// TODO : we cant always be so strict ...
+			//assert.True(t, newLoss < loss, fmt.Sprintf("new = %v , old = %v", newLoss, loss))
+		}
+		loss = newLoss
+		println(fmt.Sprintf("loss = %v", loss))
+		rneuron.backward(err, h)
 	}
+	println(fmt.Sprintf("loss = %v", loss))
+	assert.True(t, loss < 0.001)
+}
 
-	println(fmt.Sprintf("o = %v", o.T()))
-	println(fmt.Sprintf("wh = %v", wh.T()))
+func testNeuronFactory(x, y, h int) NeuronFactory {
+	builder := NewNeuronBuilder(x, y, h).
+		WithActivation(ml.TanH, ml.Sigmoid).
+		WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).
+		WithRate(*ml.Learn(0.5, 0.5))
+	return Neuron(*builder)
+}
 
+func testNeuronBuilder(x, y, h int) *NeuronBuilder {
+	return NewNeuronBuilder(x, y, h).
+		WithActivation(ml.TanH, ml.Sigmoid).
+		WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+		WithRate(*ml.Learn(0.5, 0.5))
 }

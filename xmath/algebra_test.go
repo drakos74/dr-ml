@@ -113,3 +113,19 @@ func TestDiag(t *testing.T) {
 		}
 	}
 }
+
+func Test_T(t *testing.T) {
+
+	mat := Mat(4).With(
+		Vec(2).With(11, 12),
+		Vec(2).With(21, 22),
+		Vec(2).With(31, 32),
+		Vec(2).With(41, 42),
+	)
+
+	println(fmt.Sprintf("mat = %v", mat))
+
+	matT := mat.T()
+	println(fmt.Sprintf("matT = %v", matT))
+
+}

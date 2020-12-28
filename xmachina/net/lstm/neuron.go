@@ -12,11 +12,11 @@ type state struct {
 }
 
 type cell struct {
-	forget     net.MLNeuron
-	input      net.MLNeuron
-	activation net.MLNeuron
-	output     net.MLNeuron
-	hidden     net.MLNeuron
+	forget     net.ActivationCell
+	input      net.ActivationCell
+	activation net.ActivationCell
+	output     net.ActivationCell
+	hidden     net.ActivationCell
 
 	net.Meta
 	state

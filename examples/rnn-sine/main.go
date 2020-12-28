@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"math"
-	"os"
 
 	"github.com/drakos74/go-ex-machina/xmath"
 
@@ -27,28 +25,30 @@ func init() {
 
 func main() {
 
-	weights, err := load()
+	//weights, err := load()
 
-	weights = nil
+	//weights = nil
 
-	network := rnn.New(25, 1, 100).
-		Rate(0.01).
-		Activation(ml.Sigmoid).
-		Loss(ml.CompLoss(ml.Pow)).
-		InitWeights(xmath.RangeSqrt(-1, 1), rnn.Clip{20, 20})
+	builder := rnn.NewNeuronBuilder(1, 1, 10).
+		WithRate(*ml.Rate(1)).
+		WithWeights(xmath.RangeSqrt(-1, 1)(10), xmath.RangeSqrt(-1, 1)(10)).
+		WithActivation(ml.Sigmoid, ml.Sigmoid)
+
+	network := rnn.New(10, builder, rnn.Clip{0.5, 0.5})
 	//InitWeights(xmath.Range(0, 1))
 
-	if err == nil && weights != nil {
-		println("init with weights")
-		network = rnn.New(25, 1, 100).
-			Rate(0.01).
-			Activation(ml.Sigmoid).
-			Loss(ml.CompLoss(ml.Pow)).
-			//InitWeights(xmath.RangeSqrt(-1, 1))
-			WithWeights(*weights, rnn.Clip{0, 0})
-	}
+	//if err == nil && weights != nil {
+	//	println("init with weights")
+	//	network = rnn.New(25, 1, 100).
+	//		Rate(0.01).
+	//		Activation(ml.Sigmoid).
+	//		Loss(ml.CompLoss(ml.Pow)).
+	//		//InitWeights(xmath.RangeSqrt(-1, 1))
+	//		WithWeights(*weights, rnn.Clip{0, 0})
+	//}
 
-	f := 0.025
+	// this will capture almost one full cycle for 25 events
+	f := 0.03
 
 	rnn := graph.New("RNN")
 
@@ -64,10 +64,11 @@ func main() {
 
 		if i < l*4/5 {
 			rnn.Add(sin, x, y)
-			_, weights := network.Train(xmath.Vec(1).With(y))
+			loss, _ := network.Train(xmath.Vec(1).With(y))
+			println(fmt.Sprintf("loss = %v", loss.Sum()))
 			rnn.Add(train, x, network.TmpOutput[len(network.TmpOutput)-1])
 			xx = append(xx, x)
-			save(weights)
+			//save(weights)
 		} else {
 			output := network.Predict(xmath.Vec(1).With(y))
 			rnn.Add(train, x, output[0])
@@ -81,7 +82,7 @@ func main() {
 }
 
 func evolveSine(i int, x float64) float64 {
-	return 10 * math.Sin(x)
+	return math.Sin(x)
 }
 
 // evolveSineVar reveals the shortcomings of an RNN,
@@ -93,41 +94,42 @@ func evolveSineVar(i int, x float64) float64 {
 
 const fileName = "examples/rnn-sine/data/results.json"
 
-func save(weights rnn.Weights) {
-
-	f, err := os.Create(fileName)
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer f.Close()
-
-	b, err := json.Marshal(weights)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	_, err = f.Write(b)
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-}
-
-func load() (*rnn.Weights, error) {
-
-	data, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	var weights rnn.Weights
-	err = json.Unmarshal(data, &weights)
-	if err != nil {
-		return nil, err
-	}
-
-	return &weights, nil
-}
+//
+//func save(weights rnn.Weights) {
+//
+//	f, err := os.Create(fileName)
+//
+//	if err != nil {
+//		panic(err.Error())
+//	}
+//
+//	defer f.Close()
+//
+//	b, err := json.Marshal(weights)
+//	if err != nil {
+//		panic(err.Error())
+//	}
+//
+//	_, err = f.Write(b)
+//
+//	if err != nil {
+//		panic(err.Error())
+//	}
+//
+//}
+//
+//func load() (*rnn.Weights, error) {
+//
+//	data, err := ioutil.ReadFile(fileName)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	var weights rnn.Weights
+//	err = json.Unmarshal(data, &weights)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &weights, nil
+//}

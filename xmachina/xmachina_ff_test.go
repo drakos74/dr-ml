@@ -21,7 +21,7 @@ func TestNetwork_BinaryClassificationSimple(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
-		Add(2, ff.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit))) // output layer
+		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))) // output layer
 
 	inputSet := xmath.Mat(2).With([]float64{1, 0}, []float64{0, 1})
 	outputSet := xmath.Mat(2).With([]float64{0, 1}, []float64{1, 0})
@@ -42,8 +42,8 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
-		Add(2, ff.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
-		Add(1, ff.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
+		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
+		Add(1, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
@@ -94,8 +94,8 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
-		Add(2, ff.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
-		Add(1, ff.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
+		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
+		Add(1, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -133,8 +133,8 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 	start := time.Now().UnixNano()
 	// build the network
 	network := ff.XNew(2, 1).
-		Add(2, ff.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
-		Add(1, ff.Perceptron(ml.Model(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
+		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
+		Add(1, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -171,8 +171,8 @@ func TestNetwork_BinaryClassification2D_InMem(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 2).
-		Add(20, ff.Perceptron(ml.Model().Rate(5, 0), xmath.Rand(-1, 1, xmath.Unit))).
-		Add(2, ff.Perceptron(ml.Model().Rate(5, 0), xmath.Rand(-1, 1, xmath.Unit)))
+		Add(20, ff.Perceptron(ml.Base().WithRate(ml.Learn(5, 0)), xmath.Rand(-1, 1, xmath.Unit))).
+		Add(2, ff.Perceptron(ml.Base().WithRate(ml.Learn(5, 0)), xmath.Rand(-1, 1, xmath.Unit)))
 	//.AddSoftMax()
 
 	// parse the input data

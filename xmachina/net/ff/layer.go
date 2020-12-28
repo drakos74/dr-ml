@@ -6,61 +6,42 @@ import (
 	"github.com/drakos74/go-ex-machina/xmath"
 )
 
+// Layer represents a layer in the network,
+// it will receive a vector of inputs and transform them into another vectopr of inputs.
+// Not necessarily of the same size.
 type Layer struct {
-	pSize   int
-	neurons []*Neuron
+	n, m   int
+	neuron net.Neuron
 }
 
-func NewLayer(p, n int, factory NeuronFactory, index int) net.FFLayer {
-	neurons := make([]*Neuron, n)
-	for i := 0; i < n; i++ {
-		neurons[i] = factory(p, net.Meta{
-			Index: i,
-			Layer: index,
-		})
-	}
-	return &Layer{pSize: p, neurons: neurons}
+// NewLayer creates a new layer.
+func NewLayer(n, m int, factory net.NeuronFactory, index int) *Layer {
+	return &Layer{n: n, m: m, neuron: factory(n, m, net.Meta{
+		Layer: index,
+		Index: 0,
+	})}
 }
 
-func (l *Layer) Size() int {
-	return len(l.neurons)
+// Size returns the input and output size of the layer.
+func (l *Layer) Size() (int, int) {
+	return l.n, l.m
 }
 
-// forward takes as input the outputs of all the neurons of the previous layer
+// Forward takes as input the outputs of all the neurons of the previous layer
 // it returns the output of all the neurons of the current layer
 func (l *Layer) Forward(v xmath.Vector) xmath.Vector {
-	// we are building the output vector for the next layer
-	out := xmath.Vec(len(l.neurons))
-	// each neuron will receive the same vector input from the previous layer outputs
-	// it will apply it's weights accordingly
-	//aggr := xmath.NewAggregate()
-
-	for i, n := range l.neurons {
-		out[i] = n.forward(v)
-		//aggr.Add(xmath.NewBucketFromVector(n.weights))
-	}
-	//println(fmt.Sprintf("aggr = %v", aggr))
-	return out
+	return l.neuron.Fwd(v)
 }
 
-// backward receives all the errors from the following layer
-// it returns the full matrix of partial errors for the previous layer
+// Backward receives all the errors/diffs from the following layer
+// it returns the errors/diffs for the previous layer
 func (l *Layer) Backward(err xmath.Vector) xmath.Vector {
-	// we are preparing the error output for the previous layer
-	dn := xmath.Mat(len(l.neurons))
-	for i, n := range l.neurons {
-		dn[i] = n.backward(err[i])
-	}
-	// we need the transpose in order to produce a vector corresponding to the neurons of the previous layer
-	return dn.T().Sum()
+	return l.neuron.Bwd(err)
 }
 
-func (l *Layer) Weights() xmath.Matrix {
-	m := xmath.Mat(l.Size())
-	for j := 0; j < len(l.neurons); j++ {
-		m[j] = l.neurons[j].weights
-	}
-	return m
+// Weights returns the weights of the current layer for storing the network state.
+func (l *Layer) Weights() net.Weights {
+	return *l.neuron.Weights()
 }
 
 type xVector struct {
@@ -74,6 +55,7 @@ type xFloat struct {
 }
 
 type xLayer struct {
+	pSize   int
 	neurons []*xNeuron
 	out     chan xFloat
 	backOut chan xVector
@@ -100,14 +82,15 @@ func newXLayer(p, n int, factory NeuronFactory, index int) *xLayer {
 		neurons[i] = n
 	}
 	return &xLayer{
+		pSize:   p,
 		neurons: neurons,
 		out:     out,
 		backOut: backout,
 	}
 }
 
-func (xl *xLayer) Size() int {
-	return len(xl.neurons)
+func (xl *xLayer) Size() (int, int) {
+	return len(xl.neurons), xl.pSize
 }
 
 func (xl *xLayer) Forward(v xmath.Vector) xmath.Vector {
@@ -150,12 +133,15 @@ func (xl *xLayer) Backward(err xmath.Vector) xmath.Vector {
 	return dn.T().Sum()
 }
 
-func (xl *xLayer) Weights() xmath.Matrix {
-	m := xmath.Mat(xl.Size())
+func (xl *xLayer) Weights() net.Weights {
+	sm, sb := xl.Size()
+	m := xmath.Mat(sm)
+	n := xmath.Vec(sb)
 	for j := 0; j < len(xl.neurons); j++ {
 		m[j] = xl.neurons[j].weights
+		n[j] = xl.neurons[j].bias
 	}
-	return m
+	return net.Weights{W: m, B: n}
 }
 
 type SMLayer struct {
@@ -171,8 +157,8 @@ func NewSMLayer(p, index int) *SMLayer {
 	}
 }
 
-func (sm *SMLayer) Size() int {
-	return sm.size
+func (sm *SMLayer) Size() (int, int) {
+	return sm.size, 1
 }
 
 func (sm *SMLayer) Forward(v xmath.Vector) xmath.Vector {
@@ -184,8 +170,10 @@ func (sm *SMLayer) Backward(err xmath.Vector) xmath.Vector {
 	return sm.D(sm.out).Prod(err)
 }
 
-func (sm *SMLayer) Weights() xmath.Matrix {
-	m := xmath.Mat(sm.Size())
+func (sm *SMLayer) Weights() net.Weights {
 	// there are no weights the way we approached this
-	return m
+	return net.Weights{
+		W: xmath.Mat(sm.size),
+		B: xmath.Vec(1),
+	}
 }

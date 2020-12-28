@@ -12,24 +12,28 @@ import (
 
 func Test_RNetworkSineFunc(t *testing.T) {
 
-	network := New(10, 1, 100).
-		Rate(0.001).
-		Activation(ml.TanH).
-		Loss(ml.CompLoss(ml.CrossEntropy)).
-		InitWeights(xmath.RangeSqrt(0, 1), Clip{
-			W: 1,
-			B: 1,
-		})
+	builder := NewNeuronBuilder(1, 1, 10).
+		WithRate(*ml.Rate(0.5)).
+		WithWeights(xmath.RangeSqrt(-1, 1)(10), xmath.RangeSqrt(-1, 1)(10)).
+		WithActivation(ml.TanH, ml.Sigmoid)
 
-	f := 0.1
+	network := New(10, builder, Clip{
+		W: 1,
+		B: 1,
+	})
+	println(fmt.Sprintf("network = %v", network))
+	f := 0.5
 
-	for i := 0; i < 100; i++ {
+	var err xmath.Vector
+	for i := 0; i < 1000; i++ {
 
 		x := f * float64(i)
 
-		err, _ := network.Train(xmath.Vec(1).With(math.Sin(x)))
-		println(fmt.Sprintf("err = %v", err.Sum()))
-
+		s := math.Sin(x)
+		err, _ = network.Train(xmath.Vec(1).With(s))
+		println(fmt.Sprintf("err = %v", err.Op(math.Abs).Sum()))
 	}
+
+	println(fmt.Sprintf("err = %v", err.Op(math.Abs).Sum()))
 
 }

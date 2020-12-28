@@ -14,6 +14,13 @@ type N interface {
 	Dop(dop Dop) N
 }
 
+// Check checks if the given number is a valid one.
+func Check(v float64) {
+	if math.IsNaN(v) || math.IsInf(v, 0) {
+		panic(fmt.Sprintf("%v is not a valid number", v))
+	}
+}
+
 // pp is the print precision for floats
 const pp = 8
 
@@ -102,7 +109,7 @@ func MustHaveSize(v Vector, n int) {
 // MustHaveSameSize verifies if the given vectors are of the same size
 func MustHaveSameSize(v, w Vector) {
 	if len(v) != len(w) {
-		panic(fmt.Sprintf("vectors must have the same size '%v' vs '%v'", v, w))
+		panic(fmt.Sprintf("vectors must have the same size '%v' vs '%v'", len(v), len(w)))
 	}
 }
 
@@ -137,13 +144,20 @@ func CartesianProduct(data [][]float64, current int, length int) [][]float64 {
 
 // TODO : clarify which methods mutate the vector and which not
 
-// Vector is an alias for a one dimensional array
+// Vector is an alias for a one dimensional array.
 type Vector []float64
 
-// Vec creates a new vector
+// Vec creates a new vector.
 func Vec(dim int) Vector {
 	v := make([]float64, dim)
 	return v
+}
+
+// Check checks if the elements of the vetor are well defined
+func (v Vector) Check() {
+	for _, vv := range v {
+		Check(vv)
+	}
 }
 
 // With applies the given elements in the corresponding positions of the vector
@@ -305,8 +319,8 @@ func (v Vector) String() string {
 // s is the size of the vector
 type VectorGenerator func(s, index int) Vector
 
-// Def defines a vector at the corresponding index of a matrix
-var Def = func(m ...Vector) VectorGenerator {
+// Row defines a vector at the corresponding row index of a matrix
+var Row = func(m ...Vector) VectorGenerator {
 	return func(s, index int) Vector {
 		MustHaveSize(m[index], s)
 		return m[index]

@@ -1,33 +1,26 @@
 package ml
 
-type Op func(x float64) float64
-
-type Learning interface {
-	WRate() float64
-	BRate() float64
+// Learning defines the learning rates for weight matrices and bias vectors.
+type Learning struct {
+	wRate float64
+	bRate float64
 }
 
-func (z Zero) WRate() float64 {
-	return 0
+// Learn creates a new learning struct.
+func Learn(wRate, bRate float64) *Learning {
+	return &Learning{wRate: wRate, bRate: bRate}
 }
 
-func (z Zero) BRate() float64 {
-	return 0
+func Rate(rate float64) *Learning {
+	return &Learning{wRate: rate, bRate: rate}
 }
 
-type LearningRate struct {
-	wrate float64
-	brate float64
+// WRate returns the weights learning rate.
+func (c *Learning) WRate() float64 {
+	return c.wRate
 }
 
-func Learn(rate float64) Learning {
-	return &LearningRate{wrate: rate, brate: rate}
-}
-
-func (c *LearningRate) WRate() float64 {
-	return c.wrate
-}
-
-func (c *LearningRate) BRate() float64 {
-	return c.brate
+// BRate returns the bias learning rate.
+func (c *Learning) BRate() float64 {
+	return c.bRate
 }

@@ -1,94 +1,42 @@
 package ml
 
-import (
-	"fmt"
-	"math"
-
-	"github.com/drakos74/go-ex-machina/xmath"
-)
-
-type Module interface {
+// Module encapsulates all required logic regarding the machine learning parameters.
+type Module struct {
 	Activation
-	Learning
+	*Learning
 	Descent
 }
 
-type LearningModule struct {
-	Activation
-	Learning
-	Descent
-}
-
-func Model() *LearningModule {
-	return &LearningModule{
+// Base creates an  ml module with some basic config.
+func Base() *Module {
+	return &Module{
 		Activation: Sigmoid,
-		Learning: &LearningRate{
-			wrate: 1,
-			brate: 0,
-		},
-		Descent: GradientDescent{},
+		Learning:   Learn(1, 0),
+		Descent:    GradientDescent{},
 	}
 }
 
-func (ml *LearningModule) Rate(wRate, bRate float64) *LearningModule {
-	ml.Learning = &LearningRate{wrate: wRate, brate: bRate}
-	return ml
-}
-
-func (ml *LearningModule) WithActivation(activation Activation) *LearningModule {
-	ml.Activation = activation
-	return ml
-}
-
-func (ml *LearningModule) WithRate(rate Learning) *LearningModule {
+// WithRate adjusts the rate for the learning process.
+func (ml *Module) WithRate(rate *Learning) *Module {
 	ml.Learning = rate
 	return ml
 }
 
-func (ml *LearningModule) WithDescent(descent Descent) *LearningModule {
+// WithActivation sets the activation function.
+func (ml *Module) WithActivation(activation Activation) *Module {
+	ml.Activation = activation
+	return ml
+}
+
+// WithDescent defines the gradient descent process.
+func (ml *Module) WithDescent(descent Descent) *Module {
 	ml.Descent = descent
 	return ml
 }
 
-var NoML = LearningModule{
+// NoML creates a void ml module e.g. no learning takes place.
+var NoML = Module{
 	Activation: Void{},
-	Learning:   Zero{},
+	Learning:   &Learning{},
 	Descent:    Zero{},
-}
-
-type Loss func(expected, output xmath.Vector) xmath.Vector
-
-type MLoss func(expected, output xmath.Matrix) xmath.Vector
-
-var Diff Loss = func(expected, output xmath.Vector) xmath.Vector {
-	return expected.Diff(output)
-}
-
-var Pow Loss = func(expected, output xmath.Vector) xmath.Vector {
-	return expected.Diff(output).Pow(2).Mult(0.5)
-}
-
-var CrossEntropy Loss = func(expected, output xmath.Vector) xmath.Vector {
-	xmath.MustHaveSameSize(expected, output)
-	return expected.Dop(func(x, y float64) float64 {
-		if y == 1 {
-			panic(fmt.Sprintf("cross entropy calculation threshold breached for output %v", y))
-		}
-		return -1 * x * math.Log(y)
-	}, output)
-}
-
-func CompLoss(mloss Loss) MLoss {
-	return func(expected, output xmath.Matrix) xmath.Vector {
-		size := len(expected)
-		xmath.MustHaveDim(expected, size)
-		xmath.MustHaveDim(output, size)
-		loss := xmath.Vec(len(expected))
-		for i := 0; i < size; i++ {
-			xmath.MustHaveSameSize(expected[i], output[i])
-			entropy := mloss(expected[i], output[i])
-			loss[i] = entropy.Sum() / float64(size)
-		}
-		return loss
-	}
 }

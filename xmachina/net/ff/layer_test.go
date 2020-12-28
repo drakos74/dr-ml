@@ -8,18 +8,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/rs/zerolog"
+
 	"github.com/drakos74/go-ex-machina/xmath"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+}
+
 // This is a repetition of TestNeuron_BinaryClassification in neuron_test.go
 func TestLayer_LeaningProcess(t *testing.T) {
 
-	module := ml.Model().Rate(0.5, 0)
+	module := ml.Base().WithRate(ml.Learn(0.5, 0))
 
-	layer := NewLayer(2, 2, Perceptron(module, xmath.Const(0.5)), 0)
+	layer := NewLayer(2, 2,
+		net.NewBuilder().
+			WithModule(module).
+			WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+			Factory(net.NewActivationCell), 0)
 
 	inp1 := []float64{0, 1}
 	exp1 := []float64{1, 0}
@@ -57,19 +68,20 @@ func TestLayer_LeaningProcess(t *testing.T) {
 
 	for i, r := range exp1 {
 		v := v1[i]
-		assert.True(t, math.Abs(v-r) < 0.01, fmt.Sprintf("v = %v vs r = %v", v, r))
+		assert.True(t, math.Abs(v-r) < 0.1, fmt.Sprintf("v = %v vs r = %v", v, r))
 	}
 
 	for i, r := range exp2 {
 		v := v2[i]
-		assert.True(t, math.Abs(v-r) < 0.01)
+		assert.True(t, math.Abs(v-r) < 0.1)
 	}
 
 	assert.True(t, finishedAt > 0)
 	assert.True(t, finishedAt < iterations)
 }
 
-// Note : this test might take a while ...
+// Note : this test might take a while ... because we might hit a 'bad' initial weight randomisation
+// but ... it should always eventually complete
 func TestLayer_RandomLearningProcessScenarios(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
@@ -87,7 +99,11 @@ func TestLayer_RandomLearningProcessScenarios(t *testing.T) {
 
 func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 
-	layer := NewLayer(2, 2, Perceptron(ml.Model(), xmath.Const(0.5)), 0)
+	layer := NewLayer(2, 2,
+		net.NewBuilder().
+			WithModule(ml.Base()).
+			WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+			Factory(net.NewActivationCell), 0)
 
 	v := xmath.Mat(len(inp))
 
@@ -133,7 +149,11 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 
 func TestFFLayer_WithNoLearning(t *testing.T) {
 
-	layer := NewLayer(2, 2, Perceptron(ml.Model().Rate(0, 0), xmath.Const(0.5)), 0)
+	layer := NewLayer(2, 2,
+		net.NewBuilder().
+			WithModule(ml.Base().WithRate(ml.Learn(0, 0))).
+			WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+			Factory(net.NewActivationCell), 0)
 
 	inp := []float64{0.3, 0.7}
 
@@ -156,21 +176,17 @@ func TestFFLayer_WithNoLearning(t *testing.T) {
 		output = outp
 
 	}
-
 }
 
 func TestSoftMaxLayer(t *testing.T) {
 
 	l := NewSMLayer(10, 0)
-
 	v := xmath.Vec(10).With(0.1, 2, 3, 5, 1, 7, 4, 4, 0.5, 7)
-
 	o := l.Forward(v)
 
 	assert.Equal(t, 1.0, math.Round(o.Sum()))
 
 	e := xmath.Const(0.5)(10, 0)
-
 	er := l.Backward(e.Diff(o))
 
 	println(fmt.Sprintf("er = %v", er))

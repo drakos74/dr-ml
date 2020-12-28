@@ -1,5 +1,7 @@
 package ml
 
+// TODO : decide if to keep this package or hardcode this logic inside the neuron.
+
 type Descent interface {
 	Grad(err, deriv float64) float64
 }
