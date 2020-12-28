@@ -177,18 +177,3 @@ func TestFFLayer_WithNoLearning(t *testing.T) {
 
 	}
 }
-
-func TestSoftMaxLayer(t *testing.T) {
-
-	l := NewSMLayer(10, 0)
-	v := xmath.Vec(10).With(0.1, 2, 3, 5, 1, 7, 4, 4, 0.5, 7)
-	o := l.Forward(v)
-
-	assert.Equal(t, 1.0, math.Round(o.Sum()))
-
-	e := xmath.Const(0.5)(10, 0)
-	er := l.Backward(e.Diff(o))
-
-	println(fmt.Sprintf("er = %v", er))
-
-}

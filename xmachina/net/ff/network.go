@@ -42,20 +42,6 @@ func (n *Network) Add(s int, factory net.NeuronFactory) *Network {
 	return n
 }
 
-func (n *Network) AddSoftMax() *Network {
-
-	ps := n.InputSize
-
-	ls := len(n.layers)
-	if ls > 0 {
-		// check previous layer size
-		_, ps = n.layers[ls-1].Size()
-	}
-
-	n.layers = append(n.layers, NewSMLayer(ps, len(n.layers)))
-	return n
-}
-
 func (n *Network) forward(input xmath.Vector) xmath.Vector {
 	output := xmath.Vec(len(input)).With(input...)
 	for _, l := range n.layers {
@@ -72,7 +58,7 @@ func (n *Network) backward(err xmath.Vector) {
 
 }
 
-func (n *Network) Train(input xmath.Vector, expected xmath.Vector) (err xmath.Vector, weights []net.Weights) {
+func (n *Network) Train(input xmath.Vector, expected xmath.Vector) (err xmath.Vector, weights map[net.Meta]net.Weights) {
 
 	out := n.forward(input)
 
@@ -90,11 +76,12 @@ func (n *Network) Train(input xmath.Vector, expected xmath.Vector) (err xmath.Ve
 	n.Iterations++
 
 	if n.HasTraceEnabled() {
-		weights = make([]net.Weights, len(n.layers))
+		weights = make(map[net.Meta]net.Weights, len(n.layers))
 		for i := 0; i < len(n.layers); i++ {
 			layer := n.layers[i]
-			m := layer.Weights()
-			weights[i] = m
+			for meta, ww := range layer.Weights() {
+				weights[meta] = ww
+			}
 		}
 	}
 

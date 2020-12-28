@@ -5,19 +5,13 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath"
-	"github.com/rs/zerolog"
-
 	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/drakos74/go-ex-machina/xmath"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 )
-
-func init() {
-	zerolog.SetGlobalLevel(zerolog.TraceLevel)
-}
 
 func TestNetwork_Train_NoActivation(t *testing.T) {
 
@@ -30,23 +24,17 @@ func TestNetwork_Train_NoActivation(t *testing.T) {
 				WithWeights(xmath.Row(
 					xmath.Vec(2).With(0.11, 0.21),
 					xmath.Vec(2).With(0.12, 0.08),
-				), xmath.Row(
-					xmath.Vec(2).With(0.11, 0.21),
-					xmath.Vec(2).With(0.12, 0.08),
-				)).
+				), xmath.Row(xmath.Vec(2).With(0.11, 0.21))).
 				Factory(net.NewActivationCell)).
 		Add(1,
 			net.NewBuilder().
 				WithModule(ml.Base().
 					WithRate(ml.Learn(0.05, 0.05)).
 					WithActivation(ml.Void{})).
-				WithWeights(xmath.Row(
-					xmath.Vec(2).With(0.14, 0.15),
-				), xmath.Row(
-					xmath.Vec(1).With(0.15),
-				)).
+				WithWeights(
+					xmath.Row(xmath.Vec(2).With(0.14, 0.15)),
+					xmath.Row(xmath.Vec(1).With(0.15))).
 				Factory(net.NewActivationCell))
-	//AddSoftMax().
 	n.Trace()
 
 	assertTrain(t, n,
@@ -57,19 +45,24 @@ func TestNetwork_Train_NoActivation(t *testing.T) {
 		// neuron : [0,0] -> [0.12,0.23]
 		// neuron : [0,1] -> [0.13,0.10]
 		// neuron : [1,0] -> [0.17,0.17]
-		[]net.Weights{
-			{
+		map[net.Meta]net.Weights{
+			net.Meta{}: {
 				W: xmath.Mat(2).With(
-					xmath.Vec(2).With(0.12, 0.22),
-					xmath.Vec(2).With(0.13, 0.09),
+					xmath.Vec(2).With(0.11, 0.21),
+					xmath.Vec(2).With(0.12, 0.08),
 				),
-				B: xmath.Vec(2).With(0.17, 0.17),
+				B: xmath.Vec(2).With(0.11, 0.21),
+			},
+			net.Meta{Layer: 1}: {
+				W: xmath.Mat(1).With(xmath.Vec(2).With(0.15, 0.16)),
+				B: xmath.Vec(1).With(0.16),
 			},
 		},
 	)
 
 }
 
+// TODO : fix the xNetwork
 // same as above , just with a parallelizable network
 func TestXNetwork_Train_NoActivation(t *testing.T) {
 
@@ -86,10 +79,7 @@ func TestXNetwork_Train_NoActivation(t *testing.T) {
 			Perceptron(ml.Base().
 				WithRate(ml.Learn(0.05, 0.05)).
 				WithActivation(ml.Void{}),
-				xmath.Row(
-					xmath.Vec(2).With(0.14, 0.15),
-				)))
-	//AddSoftMax().
+				xmath.Row(xmath.Vec(2).With(0.14, 0.15))))
 	n.Trace()
 
 	assertTrain(
@@ -102,20 +92,24 @@ func TestXNetwork_Train_NoActivation(t *testing.T) {
 		// neuron : [0,0] -> [0.12,0.23]
 		// neuron : [0,1] -> [0.13,0.10]
 		// neuron : [1,0] -> [0.17,0.17]
-		[]net.Weights{
-			{
+		map[net.Meta]net.Weights{
+			net.Meta{}: {
 				W: xmath.Mat(2).With(
 					xmath.Vec(2).With(0.12, 0.23),
 					xmath.Vec(2).With(0.13, 0.10),
 				),
 				B: xmath.Vec(2).With(0.17, 0.17),
 			},
+			net.Meta{Layer: 1}: {
+				W: xmath.Mat(1).With(xmath.Vec(2).With(0.15, 0.15)),
+				B: xmath.Vec(1).With(0.02),
+			},
 		},
 	)
 
 }
 
-func assertTrain(t *testing.T, n net.NN, inp, out xmath.Vector, expErr []string, expWeights []net.Weights) {
+func assertTrain(t *testing.T, n net.NN, inp, out xmath.Vector, expErr []string, expWeights map[net.Meta]net.Weights) {
 
 	err, weights := n.Train(inp, out)
 
@@ -125,8 +119,9 @@ func assertTrain(t *testing.T, n net.NN, inp, out xmath.Vector, expErr []string,
 
 	println(fmt.Sprintf("weights = %v", weights))
 
+	println(fmt.Sprintf("expWeights = %v", expWeights))
 	for i, ww := range weights {
-		assert.Equal(t, expWeights[i].W, ww.W.Op(xmath.Round(2)))
-		assert.Equal(t, expWeights[i].B, ww.B.Op(xmath.Round(2)))
+		assert.Equal(t, expWeights[i].W, ww.W.Op(xmath.Round(2)), fmt.Sprintf("%+v", i))
+		assert.Equal(t, expWeights[i].B, ww.B.Op(xmath.Round(2)), fmt.Sprintf("%+v", i))
 	}
 }

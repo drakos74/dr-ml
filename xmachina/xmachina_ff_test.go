@@ -11,17 +11,31 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
 	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+}
+
 func TestNetwork_BinaryClassificationSimple(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
-		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))) // output layer
+		Add(2,
+			net.NewBuilder().
+				WithModule(ml.Base().
+					WithRate(ml.Learn(0.05, 0.05)).
+					WithActivation(ml.Sigmoid)).
+				WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
+				Factory(net.NewActivationCell),
+		) // output layer
 
 	inputSet := xmath.Mat(2).With([]float64{1, 0}, []float64{0, 1})
 	outputSet := xmath.Mat(2).With([]float64{0, 1}, []float64{1, 0})
@@ -42,8 +56,18 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
-		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
-		Add(1, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
+		Add(2, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(0.05, 0.05)).
+				WithActivation(ml.Sigmoid)).
+			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
+			Factory(net.NewActivationCell)). // hidden layer
+		Add(1, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(0.05, 0.05)).
+				WithActivation(ml.Sigmoid)).
+			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
+			Factory(net.NewActivationCell)) // output layer
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
@@ -94,8 +118,18 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
-		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
-		Add(1, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
+		Add(2, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(0.05, 0.05)).
+				WithActivation(ml.Sigmoid)).
+			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
+			Factory(net.NewActivationCell)). // hidden layer
+		Add(1, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(0.05, 0.05)).
+				WithActivation(ml.Sigmoid)).
+			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
+			Factory(net.NewActivationCell)) // output layer
 
 	data := make(Data)
 	defer close(data)
@@ -171,8 +205,19 @@ func TestNetwork_BinaryClassification2D_InMem(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 2).
-		Add(20, ff.Perceptron(ml.Base().WithRate(ml.Learn(5, 0)), xmath.Rand(-1, 1, xmath.Unit))).
-		Add(2, ff.Perceptron(ml.Base().WithRate(ml.Learn(5, 0)), xmath.Rand(-1, 1, xmath.Unit)))
+		Add(20,
+			net.NewBuilder().
+				WithModule(ml.Base().
+					WithRate(ml.Learn(5, 0.05)).
+					WithActivation(ml.Sigmoid)).
+				WithWeights(xmath.Rand(-1, 1, xmath.Unit), xmath.Rand(-1, 1, xmath.Unit)).
+				Factory(net.NewActivationCell)).
+		Add(2, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(5, 0.05)).
+				WithActivation(ml.Sigmoid)).
+			WithWeights(xmath.Rand(-1, 1, xmath.Unit), xmath.Rand(-1, 1, xmath.Unit)).
+			Factory(net.NewActivationCell))
 	//.AddSoftMax()
 
 	// parse the input data

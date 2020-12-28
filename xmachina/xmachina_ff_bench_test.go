@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
 	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/stretchr/testify/assert"
@@ -19,8 +20,18 @@ func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 
 	// build the network
 	network := ff.New(2, 1).
-		Add(10, ff.Perceptron(ml.Model(), xmath.Const(0.5))). // hidden layer
-		Add(1, ff.Perceptron(ml.Model(), xmath.Const(0.5)))   // output layer
+		Add(10, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(0.5, 0.05)).
+				WithActivation(ml.Sigmoid)).
+			WithWeights(xmath.Rand(-1, 1, xmath.Unit), xmath.Rand(-1, 1, xmath.Unit)).
+			Factory(net.NewActivationCell)). // hidden layer
+		Add(1, net.NewBuilder().
+			WithModule(ml.Base().
+				WithRate(ml.Learn(0.5, 0.05)).
+				WithActivation(ml.Sigmoid)).
+			WithWeights(xmath.Rand(-1, 1, xmath.Unit), xmath.Rand(-1, 1, xmath.Unit)).
+			Factory(net.NewActivationCell)) // output layer
 
 	// parse the input data
 	b, err := ioutil.ReadFile("test/testdata/bin_class_input.csv")
@@ -53,10 +64,9 @@ func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 		outputSet[i] = out
 	}
 
-	TrainInMem(Training(0.0001, 10000), network, inputSet, outputSet)
+	TrainInMem(Training(0.001, 10000), network, inputSet, outputSet)
 
 	// check trained network performance
-
 	for i, input := range inputSet {
 		o := network.Predict(input).Round()
 		r := outputSet[i]

@@ -6,7 +6,7 @@ import (
 
 type NN interface {
 	NetworkConfig
-	Train(input xmath.Vector, output xmath.Vector) (err xmath.Vector, weights []Weights)
+	Train(input xmath.Vector, output xmath.Vector) (err xmath.Vector, weights map[Meta]Weights)
 	Predict(input xmath.Vector) xmath.Vector
 }
 

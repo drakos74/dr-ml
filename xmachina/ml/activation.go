@@ -73,7 +73,7 @@ func (v Void) F(x float64) float64 {
 // D returns the derivative of the activation function.
 // TODO : investigate if it should be 1 or something else.
 func (v Void) D(x float64) float64 {
-	return 1
+	return x
 }
 
 // SoftActivation defines a vector based activation function.

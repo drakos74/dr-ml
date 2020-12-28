@@ -24,11 +24,9 @@ type Network struct {
 	TmpOutput                 xmath.Vector
 }
 
-// New creates a new Recurrent layer
-// n : batch size e.g. rnn units
-// xDim : size of trainInput/trainOutput vector
-// hDim : internal hidden layer size
-// rate : learning rate
+// New creates a new Recurrent network
+// Note that the output should be not much outside the range of [-1,+1]
+// As an RNN this network is very sensitive on the training parameters, weights, batch size etc ...
 func New(n int, builder *NeuronBuilder, clipping Clip) *Network {
 	return &Network{
 		Layer:        NewLayer(n, *builder, clipping, 0),

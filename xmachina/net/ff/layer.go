@@ -1,7 +1,6 @@
 package ff
 
 import (
-	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmath"
 )
@@ -40,8 +39,10 @@ func (l *Layer) Backward(err xmath.Vector) xmath.Vector {
 }
 
 // Weights returns the weights of the current layer for storing the network state.
-func (l *Layer) Weights() net.Weights {
-	return *l.neuron.Weights()
+func (l *Layer) Weights() map[net.Meta]net.Weights {
+	return map[net.Meta]net.Weights{
+		l.neuron.Meta(): *l.neuron.Weights(),
+	}
 }
 
 type xVector struct {
@@ -133,7 +134,7 @@ func (xl *xLayer) Backward(err xmath.Vector) xmath.Vector {
 	return dn.T().Sum()
 }
 
-func (xl *xLayer) Weights() net.Weights {
+func (xl *xLayer) Weights() map[net.Meta]net.Weights {
 	sm, sb := xl.Size()
 	m := xmath.Mat(sm)
 	n := xmath.Vec(sb)
@@ -141,39 +142,10 @@ func (xl *xLayer) Weights() net.Weights {
 		m[j] = xl.neurons[j].weights
 		n[j] = xl.neurons[j].bias
 	}
-	return net.Weights{W: m, B: n}
-}
-
-type SMLayer struct {
-	ml.SoftMax
-	size int
-	out  xmath.Vector
-}
-
-func NewSMLayer(p, index int) *SMLayer {
-	return &SMLayer{
-		size: p,
-		out:  xmath.Vec(p),
-	}
-}
-
-func (sm *SMLayer) Size() (int, int) {
-	return sm.size, 1
-}
-
-func (sm *SMLayer) Forward(v xmath.Vector) xmath.Vector {
-	sm.out = sm.F(v)
-	return sm.out
-}
-
-func (sm *SMLayer) Backward(err xmath.Vector) xmath.Vector {
-	return sm.D(sm.out).Prod(err)
-}
-
-func (sm *SMLayer) Weights() net.Weights {
-	// there are no weights the way we approached this
-	return net.Weights{
-		W: xmath.Mat(sm.size),
-		B: xmath.Vec(1),
+	return map[net.Meta]net.Weights{
+		net.Meta{}: net.Weights{
+			W: m,
+			B: n,
+		},
 	}
 }

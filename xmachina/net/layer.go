@@ -52,7 +52,7 @@ type Layer interface {
 	// Backward will take the loss from next layer and generate a loss for the previous layer
 	Backward(dv xmath.Vector) xmath.Vector
 	// Weights returns the current weight matrix for the layer
-	Weights() Weights
+	Weights() map[Meta]Weights
 	// Size returns the Size of the layer e.g. number of neurons
 	Size() (int, int)
 }
