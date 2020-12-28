@@ -59,8 +59,8 @@ type NeuronFactory func(meta net.Meta) *neuron
 
 // Neuron is the neuronFactory implementation for a recursive neural network.
 var Neuron = func(builder NeuronBuilder) NeuronFactory {
-	wxh := net.NewW(builder.x, builder.h, builder.weightGenerator)
-	whh := net.NewW(builder.h, builder.h, builder.weightGenerator)
+	wxh := net.NewWeights(builder.x, builder.h, builder.weightGenerator, xmath.VoidVector)
+	whh := net.NewWeights(builder.h, builder.h, builder.weightGenerator, xmath.VoidVector)
 	why := net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator)
 	wyy := net.NewWeights(builder.h, builder.y, builder.weightGenerator, builder.biasGenerator)
 	return func(meta net.Meta) *neuron {
@@ -68,7 +68,7 @@ var Neuron = func(builder NeuronBuilder) NeuronFactory {
 			input:      net.NewWeightCell(builder.x, builder.h, *ml.Base().WithRate(&builder.rate), wxh, meta.WithID("input")),
 			hidden:     net.NewWeightCell(builder.h, builder.h, *ml.Base().WithRate(&builder.rate), whh, meta.WithID("hidden")),
 			activation: net.NewActivationCell(builder.h, builder.h, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g1), why, meta.WithID("activation")),
-			output:     net.NewActivationCell(builder.h, builder.y, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g2), wyy, meta.WithID("output")),
+			output:     net.NewWeightCell(builder.h, builder.y, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g2), wyy, meta.WithID("output")),
 			meta:       meta,
 		}
 	}

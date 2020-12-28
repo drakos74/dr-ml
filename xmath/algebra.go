@@ -319,6 +319,11 @@ func (v Vector) String() string {
 // s is the size of the vector
 type VectorGenerator func(s, index int) Vector
 
+// VoidVector creates a vector with zeros
+var VoidVector VectorGenerator = func(s, index int) Vector {
+	return Vec(s)
+}
+
 // Row defines a vector at the corresponding row index of a matrix
 var Row = func(m ...Vector) VectorGenerator {
 	return func(s, index int) Vector {

@@ -59,7 +59,7 @@ func TestRNeuron_Train(t *testing.T) {
 			hidden:     10,
 			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
 			expected:   xmath.Vec(5).With(0.2, 0.3, 0.4, 0.5, 0.6),
-			iterations: 30,
+			iterations: 100,
 		},
 		"decreasing-sequence": {
 			inp:        5,
@@ -88,10 +88,10 @@ func TestRNeuron_Train(t *testing.T) {
 		"event-trigger-thick": {
 			inp:        5,
 			outp:       5,
-			hidden:     100,
+			hidden:     30,
 			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
 			expected:   xmath.Vec(5).With(0.1, 0.1, 0.9, 0.1, 0.1),
-			iterations: 7,
+			iterations: 50,
 		},
 	}
 
@@ -132,7 +132,7 @@ func testNeuronFactory(x, y, h int) NeuronFactory {
 	builder := NewNeuronBuilder(x, y, h).
 		WithActivation(ml.TanH, ml.Sigmoid).
 		WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).
-		WithRate(*ml.Learn(0.5, 0.5))
+		WithRate(*ml.Learn(0.05, 0.05))
 	return Neuron(*builder)
 }
 
@@ -140,5 +140,5 @@ func testNeuronBuilder(x, y, h int) *NeuronBuilder {
 	return NewNeuronBuilder(x, y, h).
 		WithActivation(ml.TanH, ml.Sigmoid).
 		WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
-		WithRate(*ml.Learn(0.5, 0.5))
+		WithRate(*ml.Learn(0.05, 0.05))
 }

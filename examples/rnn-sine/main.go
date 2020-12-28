@@ -23,18 +23,21 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }
 
+// TODO : make a component test out of this
 func main() {
 
 	//weights, err := load()
 
 	//weights = nil
 
-	builder := rnn.NewNeuronBuilder(1, 1, 10).
-		WithRate(*ml.Rate(1)).
-		WithWeights(xmath.RangeSqrt(-1, 1)(10), xmath.RangeSqrt(-1, 1)(10)).
-		WithActivation(ml.Sigmoid, ml.Sigmoid)
+	bufferSize := 10
+	hiddenLayerSize := 30.0
+	builder := rnn.NewNeuronBuilder(1, 1, int(hiddenLayerSize)).
+		WithRate(*ml.Rate(0.05)).
+		WithWeights(xmath.RangeSqrt(-1, 1)(hiddenLayerSize), xmath.RangeSqrt(-1, 1)(hiddenLayerSize)).
+		WithActivation(ml.TanH, ml.Sigmoid)
 
-	network := rnn.New(10, builder, rnn.Clip{0.5, 0.5})
+	network := rnn.New(bufferSize, builder, rnn.Clip{0.5, 0.5})
 	//InitWeights(xmath.Range(0, 1))
 
 	//if err == nil && weights != nil {
@@ -56,13 +59,13 @@ func main() {
 	rnn.NewSeries(train, "x", "y")
 
 	xx := make([]float64, 0)
-	l := 5000
+	l := 3000
 	for i := 0; i < l; i++ {
 
 		x := f * float64(i)
 		y := evolveSine(i, x)
 
-		if i < l*4/5 {
+		if i < l*3/5 {
 			rnn.Add(sin, x, y)
 			loss, _ := network.Train(xmath.Vec(1).With(y))
 			println(fmt.Sprintf("loss = %v", loss.Sum()))

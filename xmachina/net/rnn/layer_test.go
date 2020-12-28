@@ -52,10 +52,10 @@ func TestRNNLayer_Train(t *testing.T) {
 			n:                5,
 			x:                1,
 			y:                1,
-			h:                100,
-			rate:             *ml.Learn(1, 1),
-			weightsGenerator: xmath.RangeSqrt(-1, 1)(10),
-			biasGenerator:    xmath.RangeSqrt(-1, 1)(10),
+			h:                20,
+			rate:             *ml.Learn(0.5, 0.5),
+			weightsGenerator: xmath.RangeSqrt(-1, 1)(20),
+			biasGenerator:    xmath.RangeSqrt(-1, 1)(20),
 			input: xmath.Mat(5).With(
 				xmath.Vec(1).With(0.1),
 				xmath.Vec(1).With(0.2),
@@ -70,7 +70,7 @@ func TestRNNLayer_Train(t *testing.T) {
 				xmath.Vec(1).With(0.2),
 				xmath.Vec(1).With(0.1),
 			),
-			threshold: 1000,
+			threshold: 3000,
 		},
 	}
 

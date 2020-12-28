@@ -12,17 +12,17 @@ import (
 
 func Test_RNetworkSineFunc(t *testing.T) {
 
-	builder := NewNeuronBuilder(1, 1, 10).
-		WithRate(*ml.Rate(0.5)).
-		WithWeights(xmath.RangeSqrt(-1, 1)(10), xmath.RangeSqrt(-1, 1)(10)).
+	builder := NewNeuronBuilder(1, 1, 30).
+		WithRate(*ml.Rate(0.05)).
+		WithWeights(xmath.RangeSqrt(-1, 1)(30), xmath.RangeSqrt(-1, 1)(30)).
 		WithActivation(ml.TanH, ml.Sigmoid)
 
-	network := New(10, builder, Clip{
-		W: 1,
-		B: 1,
+	network := New(20, builder, Clip{
+		W: 0.5,
+		B: 0.5,
 	})
 	println(fmt.Sprintf("network = %v", network))
-	f := 0.5
+	f := 0.025
 
 	var err xmath.Vector
 	for i := 0; i < 1000; i++ {

@@ -103,55 +103,55 @@ func TestActivationNeuron(t *testing.T) {
 			rate:      ml.Learn(0.5, 0.5),
 			inp:       []float64{0.5, 0.5},
 			outp:      []float64{0.1, 0.9},
-			threshold: 150,
+			threshold: 300,
 		},
 		"learn-y": {
 			rate:      ml.Learn(0.5, 0.5),
 			inp:       []float64{0.5, 0.5},
 			outp:      []float64{0.9, 0.1},
-			threshold: 150,
+			threshold: 300,
 		},
 		"learn-inv": {
 			rate:      ml.Learn(0.5, 0.5),
 			inp:       []float64{0.1, 0.9},
 			outp:      []float64{0.9, 0.1},
-			threshold: 130,
+			threshold: 300,
 		},
 		"learn-const": {
 			rate:      ml.Learn(0.5, 0.5),
 			inp:       []float64{0.1, 0.9},
 			outp:      []float64{0.1, 0.9},
-			threshold: 130,
+			threshold: 300,
 		},
 		"low-rate": {
 			rate:      ml.Learn(0.005, 0.005),
 			inp:       []float64{0.1, 0.9},
 			outp:      []float64{0.9, 0.1},
-			threshold: 13000,
+			threshold: 25000,
 		},
 		"high-rate": {
 			rate:      ml.Learn(5, 5),
 			inp:       []float64{0.1, 0.9},
 			outp:      []float64{0.9, 0.1},
-			threshold: 12,
+			threshold: 40,
 		},
 		"dim-diff-y-high": {
 			rate:      ml.Learn(5, 5),
 			inp:       []float64{0.1, 0.9},
 			outp:      []float64{1},
-			threshold: 30,
+			threshold: 500,
 		},
 		"dim-diff-y-low": {
 			rate:      ml.Learn(5, 5),
 			inp:       []float64{0.1, 0.9},
 			outp:      []float64{0.01},
-			threshold: 20,
+			threshold: 500,
 		},
 		"dim-diff-x-high": {
 			rate:      ml.Learn(5, 0),
 			inp:       []float64{1},
 			outp:      []float64{0.9, 0.1},
-			threshold: 30,
+			threshold: 500,
 		},
 		"dim-diff-x-low": {
 			rate:      ml.Learn(5, 1),
@@ -307,7 +307,7 @@ func TestWeightNeuron(t *testing.T) {
 
 			model := ml.Base().
 				WithRate(tt.rate)
-			neuron := NewWeightCell(len(tt.inp), len(tt.outp), *model, NewW(len(tt.inp), len(tt.outp), xmath.Const(0.5)), Meta{})
+			neuron := NewWeightCell(len(tt.inp), len(tt.outp), *model, NewWeights(len(tt.inp), len(tt.outp), xmath.Const(0.5), xmath.VoidVector), Meta{})
 			runTest(t, neuron, tt.inp, tt.outp, tt.threshold)
 		})
 	}

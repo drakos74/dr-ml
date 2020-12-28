@@ -22,13 +22,6 @@ func NewWeights(n, m int, weightsGenerator, biasGenerator xmath.VectorGenerator)
 	}
 }
 
-// NewW creates a new set of weights without bias.
-func NewW(n, m int, weightsGenerator xmath.VectorGenerator) *Weights {
-	return &Weights{
-		W: xmath.Mat(m).Generate(n, weightsGenerator),
-	}
-}
-
 // Neuron is a minimal computation unit with an activation function.
 // It is effectively a collection of perceptrons so not the smallest unit after all,
 // but it allows for extension in more general cases than feed forward neural nets.
@@ -226,7 +219,7 @@ func (w *WeightCell) Fwd(v xmath.Vector) xmath.Vector {
 	w.input = v
 	// combine with the weights
 	m := w.weights.W.Prod(v)
-	w.output = m
+	w.output = m.Add(w.weights.B)
 	return m
 }
 
@@ -246,6 +239,8 @@ func (w *WeightCell) Bwd(diff xmath.Vector) xmath.Vector {
 	// update weights and bias
 	dW := diff.Prod(w.input)
 	w.weights.W = w.weights.W.Add(dW.Mult(w.learning.WRate()))
+	w.weights.B = w.weights.B.Add(diff.Mult(w.learning.BRate()))
+
 	// return the loss to the previous layer
 	return dw
 }
