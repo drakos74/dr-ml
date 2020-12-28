@@ -143,7 +143,7 @@ func (xl *xLayer) Weights() map[net.Meta]net.Weights {
 		n[j] = xl.neurons[j].bias
 	}
 	return map[net.Meta]net.Weights{
-		net.Meta{}: net.Weights{
+		net.Meta{}: {
 			W: m,
 			B: n,
 		},
