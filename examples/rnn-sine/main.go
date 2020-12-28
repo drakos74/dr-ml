@@ -31,13 +31,13 @@ func main() {
 	//weights = nil
 
 	bufferSize := 10
-	hiddenLayerSize := 30.0
+	hiddenLayerSize := 10.0
 	builder := rnn.NewNeuronBuilder(1, 1, int(hiddenLayerSize)).
 		WithRate(*ml.Rate(0.05)).
 		WithWeights(xmath.RangeSqrt(-1, 1)(hiddenLayerSize), xmath.RangeSqrt(-1, 1)(hiddenLayerSize)).
 		WithActivation(ml.TanH, ml.Sigmoid)
 
-	network := rnn.New(bufferSize, builder, rnn.Clip{0.5, 0.5})
+	network := rnn.New(bufferSize, builder, rnn.Clip{5, 5})
 	//InitWeights(xmath.Range(0, 1))
 
 	//if err == nil && weights != nil {
