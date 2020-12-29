@@ -27,7 +27,7 @@ type Network struct {
 // New creates a new Recurrent network
 // Note that the output should be not much outside the range of [-1,+1]
 // As an RNN this network is very sensitive on the training parameters, weights, batch size etc ...
-func New(n int, builder *NeuronBuilder, clipping Clip) *Network {
+func New(n int, builder *NeuronBuilder, clipping net.Clip) *Network {
 	return &Network{
 		Layer:        NewLayer(n, *builder, clipping, 0),
 		predictInput: time.NewWindow(n),
@@ -72,7 +72,7 @@ func New(n int, builder *NeuronBuilder, clipping Clip) *Network {
 //	return net
 //}
 
-func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights []net.Weights) {
+func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights map[net.Meta]net.Weights) {
 	// add our trainInput & trainOutput to the batch
 	batch, batchIsReady := net.trainOutput.Push(data)
 	// be ready for predictions ... from the start
@@ -127,13 +127,8 @@ func (net *Network) Predict(input xmath.Vector) xmath.Vector {
 	return xmath.Vec(len(input))
 }
 
-func gatherWeights(layer *Layer) []net.Weights {
-	weights := make([]net.Weights, 4)
-	weights[0] = *layer.neurons[0].input.Weights()
-	weights[0] = *layer.neurons[0].hidden.Weights()
-	weights[0] = *layer.neurons[0].activation.Weights()
-	weights[0] = *layer.neurons[0].output.Weights()
-	return weights
+func gatherWeights(layer *Layer) map[net.Meta]net.Weights {
+	return layer.Weights()
 }
 
 // TODO: make it the corresponding one compared to the above ..

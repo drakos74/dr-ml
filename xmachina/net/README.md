@@ -26,6 +26,9 @@ gradients.
 - For each backward step the cell needs to `absorb` it's part of the difference (error) from the expected output, while
   updating any related values to it s weights etc ...
 
+The implementation for different cells are based on the following basic
+concept [determining backpropagation equations](http://practicalcryptography.com/miscellaneous/machine-learning/graphically-determining-backpropagation-equations/)
+
 ### Activation Cell
 
 ### Weight Cell

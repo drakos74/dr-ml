@@ -6,38 +6,42 @@ import (
 	"github.com/drakos74/go-ex-machina/xmath"
 )
 
+type cellType string
+
+const (
+	stackCell        cellType = "stack-cell"
+	forgetNeuron     cellType = "forget-neuron"
+	forgetCell       cellType = "forget-cell"
+	inputLeftNeuron  cellType = "input-left-neuron"
+	inputRightNeuron cellType = "input-right-neuron"
+	inputCell        cellType = "input-cell"
+	stateNeuron      cellType = "state-neuron"
+	outputNeuron     cellType = "output-neuron"
+	stateCell        cellType = "state-cell"
+	softCell         cellType = "soft-cell"
+)
+
 type neuron struct {
-	forget net.Neuron
-	input1 net.Neuron
-	input2 net.Neuron
-	state  net.Neuron
-	output net.Neuron
-	soft   net.Neuron
-	meta   net.Meta
+	biOps map[cellType]net.BiOp
+	cells map[cellType]net.Neuron
+	meta  net.Meta
 }
 
 // NeuronBuilder holds all neuron properties needed to construct the neuron.
 type NeuronBuilder struct {
-	x, y, h                        int
-	g1, g2                         ml.Activation
+	n, x, h, s                     int
 	rate                           ml.Learning
 	weightGenerator, biasGenerator xmath.VectorGenerator
 }
 
 // NewNeuronBuilder creates a new neuron builder.
-func NewNeuronBuilder(x, y, h int) *NeuronBuilder {
+func NewNeuronBuilder(n, x, h, s int) *NeuronBuilder {
 	return &NeuronBuilder{
+		n: n,
 		x: x,
-		y: y,
 		h: h,
+		s: s,
 	}
-}
-
-// WithActivation defines the activation functions for the rnn neuron.
-func (nb *NeuronBuilder) WithActivation(g1, g2 ml.Activation) *NeuronBuilder {
-	nb.g1 = g1
-	nb.g2 = g2
-	return nb
 }
 
 // WithWeights defines the weight generator functions for the rnn neuron.
@@ -59,59 +63,98 @@ type NeuronFactory func(meta net.Meta) *neuron
 // Neuron is the neuronFactory implementation for a recursive neural network.
 var Neuron = func(builder NeuronBuilder) NeuronFactory {
 	return func(meta net.Meta) *neuron {
+		z := builder.x + builder.h
+		fw := net.NewWeights(z, z, builder.weightGenerator, builder.biasGenerator)
+		ilw := net.NewWeights(z, z, builder.weightGenerator, builder.biasGenerator)
+		irw := net.NewWeights(z, z, builder.weightGenerator, builder.biasGenerator)
+		sw := net.NewWeights(z, z, builder.weightGenerator, builder.biasGenerator)
+		ow := net.NewWeights(z, z, builder.weightGenerator, builder.biasGenerator)
 		return &neuron{
-			forget: net.NewActivationCell(builder.x, builder.h, *ml.Base().
-				WithActivation(ml.Sigmoid).
-				WithRate(&builder.rate),
-				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
-				meta.WithID("forget")),
-			input1: net.NewActivationCell(builder.x, builder.h, *ml.Base().
-				WithActivation(ml.Sigmoid).
-				WithRate(&builder.rate),
-				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
-				meta.WithID("input-1")),
-			input2: net.NewActivationCell(builder.x, builder.h, *ml.Base().
-				WithActivation(ml.TanH).
-				WithRate(&builder.rate),
-				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
-				meta.WithID("input-2")),
-			state: net.NewActivationCell(builder.x, builder.h, *ml.Base().
-				WithActivation(ml.TanH).
-				WithRate(&builder.rate),
-				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
-				meta.WithID("state")),
-			output: net.NewActivationCell(builder.x, builder.h, *ml.Base().
-				WithActivation(ml.Sigmoid).
-				WithRate(&builder.rate),
-				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
-				meta.WithID("output")),
-			soft: net.NewSoftCell(builder.x, builder.h, meta.WithID("softmax")),
+			biOps: map[cellType]net.BiOp{
+				stackCell:  net.NewStackCell(),
+				forgetCell: net.NewMulCell(),
+				inputCell:  net.NewMulCell(),
+				stateCell:  net.NewMulCell(),
+			},
+			cells: map[cellType]net.Neuron{
+				forgetNeuron: net.NewActivationCell(z, z, *ml.Base().
+					WithActivation(ml.Sigmoid).
+					WithRate(&builder.rate),
+					fw,
+					meta.WithID(string(forgetNeuron))),
+				inputLeftNeuron: net.NewActivationCell(z, z, *ml.Base().
+					WithActivation(ml.Sigmoid).
+					WithRate(&builder.rate),
+					ilw,
+					meta.WithID(string(inputLeftNeuron))),
+				inputRightNeuron: net.NewActivationCell(z, z, *ml.Base().
+					WithActivation(ml.TanH).
+					WithRate(&builder.rate),
+					irw,
+					meta.WithID(string(inputRightNeuron))),
+				stateNeuron: net.NewActivationCell(z, z, *ml.Base().
+					WithActivation(ml.TanH).
+					WithRate(&builder.rate),
+					sw,
+					meta.WithID(string(stateNeuron))),
+				outputNeuron: net.NewActivationCell(z, z, *ml.Base().
+					WithActivation(ml.Sigmoid).
+					WithRate(&builder.rate),
+					ow,
+					meta.WithID(string(outputNeuron))),
+				softCell: net.NewSoftCell(z, z, meta.WithID(string(softCell))),
+			},
 			meta: meta,
 		}
 	}
 }
 
-func (lstm *neuron) forward(x, prev_h, prev_s xmath.Vector) (y, next_h, next_s xmath.Vector) {
+func (n *neuron) forward(x, prev_h, prev_s xmath.Vector) (y, next_h, next_s xmath.Vector) {
 
-	v := x.Stack(prev_h)
+	v := n.biOps[stackCell].Fwd(x, prev_h)
 
-	f := lstm.forget.Fwd(v)
-	i1 := lstm.input1.Fwd(v)
-	i2 := lstm.input2.Fwd(v)
-	o := lstm.output.Fwd(v)
+	f := n.cells[forgetNeuron].Fwd(v)
+	il := n.cells[inputLeftNeuron].Fwd(v)
+	ir := n.cells[inputRightNeuron].Fwd(v)
+	o := n.cells[outputNeuron].Fwd(v)
 
-	s := f.X(prev_s)
-	i := i1.X(i2)
+	s := n.biOps[forgetCell].Fwd(f, prev_s)
+	i := n.biOps[inputCell].Fwd(il, ir)
+
 	next_s = s.Add(i)
-	c := lstm.state.Fwd(next_s)
+	c := n.cells[stateNeuron].Fwd(next_s)
 
-	next_h = c.X(o)
+	next_h = n.biOps[stateCell].Fwd(c, o)
 
-	y = lstm.soft.Fwd(next_h)
+	yh := n.cells[softCell].Fwd(next_h)
+
+	y, next_h = n.biOps[stackCell].Bwd(yh)
 
 	return y, next_h, next_s
 }
 
-func (lstm *neuron) backward(dy, dh, ds xmath.Vector) (x, h, s xmath.Vector) {
+func (n *neuron) backward(dy, dh, ds xmath.Vector) (x, h, s xmath.Vector) {
 
+	dyh := n.biOps[stackCell].Fwd(dy, dh)
+
+	dwh := n.cells[softCell].Bwd(dyh)
+	dwh = dyh.Add(dwh)
+
+	dc, do := n.biOps[stateCell].Bwd(dwh)
+	dws := n.cells[stateNeuron].Bwd(dc)
+	s = ds.Add(dws)
+
+	di1, di2 := n.biOps[inputCell].Bwd(dws)
+	df, dws := n.biOps[forgetCell].Bwd(dws)
+
+	dvo := n.cells[outputNeuron].Bwd(do)
+	dvi1 := n.cells[inputLeftNeuron].Bwd(di1)
+	dvi2 := n.cells[inputRightNeuron].Bwd(di2)
+	dvf := n.cells[forgetNeuron].Bwd(df)
+
+	dv := dvo.Add(dvi1).Add(dvi2).Add(dvf)
+
+	x, h = n.biOps[stackCell].Bwd(dv)
+
+	return x, h, s
 }

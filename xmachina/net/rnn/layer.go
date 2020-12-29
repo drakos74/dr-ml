@@ -9,16 +9,11 @@ import (
 
 // Layer is the recurrent network layer.
 type Layer struct {
-	clip    Clip
+	clip    net.Clip
 	neurons []*neuron
 	xDim    int
 	hDim    int
 	out     xmath.Matrix
-}
-
-// Clip defines the clipping range for weights
-type Clip struct {
-	W, B float64
 }
 
 // Weights returns the layer weights.
@@ -38,7 +33,7 @@ func (r *Layer) Weights() map[net.Meta]net.Weights {
 }
 
 // NewLayer creates a new Recurrent layer
-func NewLayer(n int, builder NeuronBuilder, clipping Clip, index int) *Layer {
+func NewLayer(n int, builder NeuronBuilder, clipping net.Clip, index int) *Layer {
 	neurons := make([]*neuron, n)
 	factory := Neuron(builder)
 	for i := 0; i < n; i++ {
@@ -63,8 +58,8 @@ func NewLayer(n int, builder NeuronBuilder, clipping Clip, index int) *Layer {
 // hDim : internal hidden layer size
 // factory : neuronFactory factory to be used for the rnn unit
 // index : index of layer in the network
-// TODO : remove the rate and use it within the ml.Module
-//func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weights Weights, clipping Clip, index int) *Layer {
+// TODO : remove the rate and use it within the ml.BiOp
+//func LoadRNNLayer(n, xDim, hDim int, learning ml.Learning, factory NeuronFactory, weights Weights, clipping net.Clip, index int) *Layer {
 //	neurons := make([]*neuron, n)
 //	for i := 0; i < n; i++ {
 //		neuron := factory(xDim, n, hDim, net.Meta{

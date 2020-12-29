@@ -26,10 +26,9 @@ func NewWeights(n, m int, weightsGenerator, biasGenerator xmath.VectorGenerator)
 // It is effectively a collection of perceptrons so not the smallest unit after all,
 // but it allows for extension in more general cases than feed forward neural nets.
 type Neuron interface {
+	Op
 	Meta() Meta
 	Weights() *Weights
-	Fwd(x xmath.Vector) xmath.Vector
-	Bwd(dy xmath.Vector) xmath.Vector
 }
 
 // Meta defines the metadata for the neuron.
@@ -123,6 +122,7 @@ func (n ActivationCell) Weights() *Weights {
 	return n.weights
 }
 
+// TODO : move to an Op , as it has no weights
 // SoftCell is the basic implementation for the neuron.
 type SoftCell struct {
 	softmax       ml.SoftActivation
@@ -268,11 +268,11 @@ func (nb *NeuronBuilder) WithModule(module *ml.Module) *NeuronBuilder {
 	return nb
 }
 
-// Constructor defines a neuron constructor to be used with the neuron builder.
-type Constructor func(n, m int, module ml.Module, weights *Weights, meta Meta) Neuron
+// NeuronConstructor defines a neuron constructor to be used with the neuron builder.
+type NeuronConstructor func(n, m int, module ml.Module, weights *Weights, meta Meta) Neuron
 
 // Factory returns a neuron factory.
-func (nb *NeuronBuilder) Factory(constr Constructor) NeuronFactory {
+func (nb *NeuronBuilder) Factory(constr NeuronConstructor) NeuronFactory {
 	return func(n, m int, meta Meta) Neuron {
 		log.Trace().Int("n-input", n).Int("m-output", m).Msg("create neuron")
 		return constr(

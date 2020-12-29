@@ -74,67 +74,67 @@ var Neuron = func(builder NeuronBuilder) NeuronFactory {
 	}
 }
 
-func (rn *neuron) forward(x, prev_h xmath.Vector) (y, next_h xmath.Vector) {
+func (n *neuron) forward(x, prev_h xmath.Vector) (y, next_h xmath.Vector) {
 	// apply internal state weights
-	wx := rn.input.Fwd(x)
+	wx := n.input.Fwd(x)
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("wx", wx).
 		Msg("wx")
-	wh := rn.hidden.Fwd(prev_h)
+	wh := n.hidden.Fwd(prev_h)
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("wh", wh).
 		Msg("wh")
 	w := wx.Add(wh)
 	// apply activation
-	next_h = rn.activation.Fwd(w)
+	next_h = n.activation.Fwd(w)
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("h", next_h).
 		Msg("next")
 	// compute output
-	y = rn.output.Fwd(next_h)
+	y = n.output.Fwd(next_h)
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("y", y).
 		Msg("output")
 	return y, next_h
 }
 
-func (rn *neuron) backward(dy, dh xmath.Vector) (x, h xmath.Vector) {
+func (n *neuron) backward(dy, dh xmath.Vector) (x, h xmath.Vector) {
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("dy", dy).
 		Floats64("dh", dh).
 		Msg("error")
 	// we need to trace our  steps back ...
-	dh = dh.Add(rn.output.Bwd(dy))
+	dh = dh.Add(n.output.Bwd(dy))
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("dh", dh).
 		Msg("dh")
 	dh.Check()
 
 	// de-activation
-	dW := rn.activation.Bwd(dh)
+	dW := n.activation.Bwd(dh)
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("dW", dW).
 		Msg("dW")
 	dW.Check()
 
 	// hidden state
-	dWh := rn.hidden.Bwd(dW)
+	dWh := n.hidden.Bwd(dW)
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("dWh", dWh).
 		Msg("dWh")
 	dWh.Check()
 
-	dWx := rn.input.Bwd(dW)
+	dWx := n.input.Bwd(dW)
 	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
+		Str("meta", fmt.Sprintf("%+v", n.meta)).
 		Floats64("dWx", dWx).
 		Msg("dWx")
 	dWx.Check()

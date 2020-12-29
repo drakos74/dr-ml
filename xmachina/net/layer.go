@@ -68,3 +68,8 @@ type RecurrentLayer interface {
 	// Size returns the Size of the layer e.g. number of neurons
 	Size() (n, x, h int)
 }
+
+// Clip defines the clipping range for weights
+type Clip struct {
+	W, B float64
+}

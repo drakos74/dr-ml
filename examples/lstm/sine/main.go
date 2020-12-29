@@ -4,16 +4,12 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/drakos74/go-ex-machina/xmachina/net"
-
-	"github.com/drakos74/go-ex-machina/xmath"
-
-	"github.com/drakos74/go-ex-machina/xmachina/net/rnn"
-
-	"github.com/rs/zerolog"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/drakos74/go-ex-machina/xmachina/net/lstm"
+	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/drakos74/oremi/graph"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -35,15 +31,15 @@ func main() {
 	//weights = nil
 
 	bufferSize := 10
-	hiddenLayerSize := 10.0
-	builder := rnn.NewNeuronBuilder(1, 1, int(hiddenLayerSize)).
-		WithRate(*ml.Rate(0.05)).
-		WithWeights(xmath.RangeSqrt(-1, 1)(hiddenLayerSize), xmath.RangeSqrt(-1, 1)(hiddenLayerSize)).
-		WithActivation(ml.TanH, ml.Sigmoid)
+	hiddenLayerSize := 30.0
+	builder := lstm.NewNeuronBuilder(bufferSize, 1, int(hiddenLayerSize), int(hiddenLayerSize)+1).
+		WithRate(*ml.Rate(0.5)).
+		WithWeights(xmath.RangeSqrt(-1, 1)(hiddenLayerSize), xmath.RangeSqrt(-1, 1)(hiddenLayerSize))
 
-	network := rnn.New(bufferSize, builder, net.Clip{W: 1, B: 1})
-	network_dummy := rnn.New(bufferSize, builder, net.Clip{W: 1, B: 1})
-	network_evolve := rnn.New(bufferSize, builder, net.Clip{W: 1, B: 1})
+	clip := net.Clip{W: 1, B: 1}
+	network := lstm.New(bufferSize, builder, clip)
+	network_dummy := lstm.New(bufferSize, builder, clip)
+	network_evolve := lstm.New(bufferSize, builder, clip)
 
 	//InitWeights(xmath.Range(0, 1))
 
@@ -95,6 +91,10 @@ func main() {
 		dummyOutput := network_dummy.Predict(xmath.Vec(1).With(y))
 		rnn.Add(dummy, x, dummyOutput[0])
 
+		if i%250 == 0 {
+			println(fmt.Sprintf("i = %v", i))
+		}
+
 	}
 
 	// draw the data collection
@@ -103,13 +103,13 @@ func main() {
 }
 
 func evolveSine(i int, x float64) float64 {
-	return math.Sin(x)
+	return math.Abs(math.Sin(x))
 }
 
 // evolveSineVar reveals the shortcomings of an RNN,
 // not being able to capture variations in period.
 func evolveSineVar(i int, x float64) float64 {
-	return 0.3*math.Sin(x) + 0.3*math.Sin(2*x) + 0.3*math.Sin(5*x)
+	return math.Abs(0.3*math.Sin(x) + 0.3*math.Sin(2*x) + 0.3*math.Sin(5*x))
 }
 
 const fileName = "examples/rnn-sine/data/results.json"
