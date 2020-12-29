@@ -29,7 +29,7 @@ type Neuron interface {
 	Meta() Meta
 	Weights() *Weights
 	Fwd(x xmath.Vector) xmath.Vector
-	Bwd(x xmath.Vector) xmath.Vector
+	Bwd(dy xmath.Vector) xmath.Vector
 }
 
 // Meta defines the metadata for the neuron.
@@ -125,23 +125,19 @@ func (n ActivationCell) Weights() *Weights {
 
 // SoftCell is the basic implementation for the neuron.
 type SoftCell struct {
-	learning      ml.Module
 	softmax       ml.SoftActivation
-	weights       *Weights
 	meta          Meta
 	input, output xmath.Vector
 }
 
 // NewSoftCell creates a new ml neuron.
-func NewSoftCell(n, m int, module ml.Module, weights *Weights, meta Meta) Neuron {
+func NewSoftCell(n, m int, meta Meta) Neuron {
 	// override the ml module with softmax
 	return &SoftCell{
-		learning: module,
-		softmax:  ml.SoftMax{},
-		weights:  weights,
-		meta:     meta,
-		input:    xmath.Vec(n),
-		output:   xmath.Vec(m),
+		softmax: ml.SoftMax{},
+		meta:    meta,
+		input:   xmath.Vec(n),
+		output:  xmath.Vec(m),
 	}
 }
 
@@ -167,7 +163,7 @@ func (n SoftCell) Meta() Meta {
 
 // Weights returns all the required constants needed to re-build the neuron state.
 func (n SoftCell) Weights() *Weights {
-	return n.weights
+	return nil
 }
 
 // WeightCell is the basic implementation for the matrix multiplication neuron.

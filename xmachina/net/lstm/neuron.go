@@ -1,20 +1,19 @@
 package lstm
 
 import (
-	"fmt"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmath"
-	"github.com/rs/zerolog/log"
 )
 
 type neuron struct {
-	input      net.Neuron
-	hidden     net.Neuron
-	activation net.Neuron
-	output     net.Neuron
-	meta       net.Meta
+	forget net.Neuron
+	input1 net.Neuron
+	input2 net.Neuron
+	state  net.Neuron
+	output net.Neuron
+	soft   net.Neuron
+	meta   net.Meta
 }
 
 // NeuronBuilder holds all neuron properties needed to construct the neuron.
@@ -59,85 +58,60 @@ type NeuronFactory func(meta net.Meta) *neuron
 
 // Neuron is the neuronFactory implementation for a recursive neural network.
 var Neuron = func(builder NeuronBuilder) NeuronFactory {
-	wxh := net.NewWeights(builder.x, builder.h, builder.weightGenerator, xmath.VoidVector)
-	whh := net.NewWeights(builder.h, builder.h, builder.weightGenerator, xmath.VoidVector)
-	why := net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator)
-	wyy := net.NewWeights(builder.h, builder.y, builder.weightGenerator, builder.biasGenerator)
 	return func(meta net.Meta) *neuron {
 		return &neuron{
-			input:      net.NewWeightCell(builder.x, builder.h, *ml.Base().WithRate(&builder.rate), wxh, meta.WithID("input")),
-			hidden:     net.NewWeightCell(builder.h, builder.h, *ml.Base().WithRate(&builder.rate), whh, meta.WithID("hidden")),
-			activation: net.NewActivationCell(builder.h, builder.h, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g1), why, meta.WithID("activation")),
-			output:     net.NewWeightCell(builder.h, builder.y, *ml.Base().WithRate(&builder.rate).WithActivation(builder.g2), wyy, meta.WithID("output")),
-			meta:       meta,
+			forget: net.NewActivationCell(builder.x, builder.h, *ml.Base().
+				WithActivation(ml.Sigmoid).
+				WithRate(&builder.rate),
+				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
+				meta.WithID("forget")),
+			input1: net.NewActivationCell(builder.x, builder.h, *ml.Base().
+				WithActivation(ml.Sigmoid).
+				WithRate(&builder.rate),
+				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
+				meta.WithID("input-1")),
+			input2: net.NewActivationCell(builder.x, builder.h, *ml.Base().
+				WithActivation(ml.TanH).
+				WithRate(&builder.rate),
+				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
+				meta.WithID("input-2")),
+			state: net.NewActivationCell(builder.x, builder.h, *ml.Base().
+				WithActivation(ml.TanH).
+				WithRate(&builder.rate),
+				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
+				meta.WithID("state")),
+			output: net.NewActivationCell(builder.x, builder.h, *ml.Base().
+				WithActivation(ml.Sigmoid).
+				WithRate(&builder.rate),
+				net.NewWeights(builder.h, builder.h, builder.weightGenerator, builder.biasGenerator),
+				meta.WithID("output")),
+			soft: net.NewSoftCell(builder.x, builder.h, meta.WithID("softmax")),
+			meta: meta,
 		}
 	}
 }
 
-func (rn *neuron) forward(x, prev_h xmath.Vector) (y, next_h xmath.Vector) {
-	// apply internal state weights
-	wx := rn.input.Fwd(x)
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("wx", wx).
-		Msg("wx")
-	wh := rn.hidden.Fwd(prev_h)
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("wh", wh).
-		Msg("wh")
-	w := wx.Add(wh)
-	// apply activation
-	next_h = rn.activation.Fwd(w)
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("h", next_h).
-		Msg("next")
-	// compute output
-	y = rn.output.Fwd(next_h)
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("y", y).
-		Msg("output")
-	return y, next_h
+func (lstm *neuron) forward(x, prev_h, prev_s xmath.Vector) (y, next_h, next_s xmath.Vector) {
+
+	v := x.Stack(prev_h)
+
+	f := lstm.forget.Fwd(v)
+	i1 := lstm.input1.Fwd(v)
+	i2 := lstm.input2.Fwd(v)
+	o := lstm.output.Fwd(v)
+
+	s := f.X(prev_s)
+	i := i1.X(i2)
+	next_s = s.Add(i)
+	c := lstm.state.Fwd(next_s)
+
+	next_h = c.X(o)
+
+	y = lstm.soft.Fwd(next_h)
+
+	return y, next_h, next_s
 }
 
-func (rn *neuron) backward(dy, dh xmath.Vector) (x, h xmath.Vector) {
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("dy", dy).
-		Floats64("dh", dh).
-		Msg("error")
-	// we need to trace our  steps back ...
-	dh = dh.Add(rn.output.Bwd(dy))
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("dh", dh).
-		Msg("dh")
-	dh.Check()
+func (lstm *neuron) backward(dy, dh, ds xmath.Vector) (x, h, s xmath.Vector) {
 
-	// de-activation
-	dW := rn.activation.Bwd(dh)
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("dW", dW).
-		Msg("dW")
-	dW.Check()
-
-	// hidden state
-	dWh := rn.hidden.Bwd(dW)
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("dWh", dWh).
-		Msg("dWh")
-	dWh.Check()
-
-	dWx := rn.input.Bwd(dW)
-	log.Trace().
-		Str("meta", fmt.Sprintf("%+v", rn.meta)).
-		Floats64("dWx", dWx).
-		Msg("dWx")
-	dWx.Check()
-
-	return dWx, dWh
 }
