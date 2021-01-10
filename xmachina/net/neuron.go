@@ -283,3 +283,17 @@ func (nb *NeuronBuilder) Factory(constr NeuronConstructor) NeuronFactory {
 		)
 	}
 }
+
+// CellConstructor defines a cell constructor to be used with the neuron builder.
+type CellConstructor func(n, m int, meta Meta) Neuron
+
+// Factory returns a neuron factory.
+func (nb *NeuronBuilder) CellFactory(constr CellConstructor) NeuronFactory {
+	return func(n, m int, meta Meta) Neuron {
+		log.Trace().Int("n-input", n).Int("m-output", m).Msg("create cell")
+		return constr(
+			n, m,
+			meta,
+		)
+	}
+}

@@ -390,9 +390,7 @@ func TestSoftNeuron(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			model := ml.Base().
-				WithRate(tt.rate)
-			neuron := NewSoftCell(len(tt.inp), len(tt.outp), *model, NewWeights(len(tt.inp), len(tt.outp), xmath.Const(0.5), xmath.Const(0.5)), Meta{})
+			neuron := NewSoftCell(len(tt.inp), len(tt.outp), Meta{})
 			runTest(t, neuron, tt.inp, tt.outp, tt.threshold)
 		})
 	}
