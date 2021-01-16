@@ -21,7 +21,6 @@ type Network struct {
 
 	loss                      ml.MLoss
 	predictInput, trainOutput *time.Window
-	TmpOutput                 xmath.Vector
 }
 
 // New creates a new Recurrent network
@@ -72,13 +71,12 @@ func New(n int, builder *NeuronBuilder, clipping net.Clip) *Network {
 //	return net
 //}
 
-func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights map[net.Meta]net.Weights) {
+func (net *Network) Train(data xmath.Vector, outputData xmath.Vector) (err xmath.Vector, weights map[net.Meta]net.Weights) {
 	// add our trainInput & trainOutput to the batch
 	batch, batchIsReady := net.trainOutput.Push(data)
 	// be ready for predictions ... from the start
 	net.predictInput.Push(data)
 	loss := xmath.Vec(len(data))
-	net.TmpOutput = xmath.Vec(len(data))
 	if batchIsReady {
 		// we can actually train now ...
 		inp := time.Inp(batch)
@@ -87,8 +85,11 @@ func (net *Network) Train(data xmath.Vector) (err xmath.Vector, weights map[net.
 		// forward pass
 		out := net.Forward(inp)
 
-		// keep the last data as the standard data
-		net.TmpOutput = out[len(out)-1]
+		// pass the data to the output vector
+		for i := 0; i < len(outputData); i++ {
+			// keep the last row as output data
+			outputData[i] = out[len(out)-1][i]
+		}
 
 		// add the cross entropy loss for each of the vectors
 		loss = net.loss(exp, out).Op(math.Abs)

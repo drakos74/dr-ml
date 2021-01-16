@@ -35,7 +35,7 @@ func TestSigmoid_Derivative(t *testing.T) {
 		if x0 != 0 && y0 != 0 {
 			// calculate the derivative approximately
 			drv := (y - y0) / (x - x0)
-			back := s.D(x)
+			back := s.D(s.F(x))
 			assert.True(t, math.Abs(drv-back) < 0.01, fmt.Sprintf("x = %v -> y = %v -> dy/dx = %v, b = %v , err = %v", x, y, drv, back, drv-back))
 		}
 		x0 = x

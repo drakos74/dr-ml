@@ -1,19 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"math"
-
-	"github.com/drakos74/go-ex-machina/xmachina/net"
-
-	"github.com/drakos74/go-ex-machina/xmath"
-
-	"github.com/drakos74/go-ex-machina/xmachina/net/rnn"
-
+	"github.com/drakos74/go-ex-machina/xmachina"
 	"github.com/rs/zerolog"
-
-	"github.com/drakos74/go-ex-machina/xmachina/ml"
-	"github.com/drakos74/oremi/graph"
 )
 
 const (
@@ -34,17 +23,6 @@ func main() {
 
 	//weights = nil
 
-	bufferSize := 10
-	hiddenLayerSize := 10.0
-	builder := rnn.NewNeuronBuilder(1, 1, int(hiddenLayerSize)).
-		WithRate(*ml.Rate(0.05)).
-		WithWeights(xmath.RangeSqrt(-1, 1)(hiddenLayerSize), xmath.RangeSqrt(-1, 1)(hiddenLayerSize)).
-		WithActivation(ml.TanH, ml.Sigmoid)
-
-	network := rnn.New(bufferSize, builder, net.Clip{W: 1, B: 1})
-	network_dummy := rnn.New(bufferSize, builder, net.Clip{W: 1, B: 1})
-	network_evolve := rnn.New(bufferSize, builder, net.Clip{W: 1, B: 1})
-
 	//InitWeights(xmath.Range(0, 1))
 
 	//if err == nil && weights != nil {
@@ -57,59 +35,30 @@ func main() {
 	//		WithWeights(*weights, rnn.Clip{0, 0})
 	//}
 
-	// this will capture almost one full cycle for 25 events
-	f := 0.03
+	// init graphs
+	//graph := oremi.New("RNN").
+	data := xmachina.VoidSet().
+		Init([]xmachina.Set{
+			{Name: sin, X: "x", Y: "y"},
+			{Name: train, X: "x", Y: "y"},
+			{Name: dummy, X: "x", Y: "y"},
+			{Name: evolve, X: "x", Y: "y"},
+		}...)
 
-	rnn := graph.New("RNN")
-
-	rnn.NewSeries(sin, "x", "y")
-	rnn.NewSeries(train, "x", "y")
-	rnn.NewSeries(dummy, "x", "y")
-	rnn.NewSeries(evolve, "x", "y")
-
-	xx := make([]float64, 0)
-	l := 3000
-	var lastOutput float64
-	for i := 0; i < l; i++ {
-
-		x := f * float64(i)
-		y := evolveSine(i, x)
-		//y := evolveSineVar(i, x)
-
-		if i < l*3/5 {
-			rnn.Add(sin, x, y)
-			loss, _ := network.Train(xmath.Vec(1).With(y))
-			network_evolve.Train(xmath.Vec(1).With(y))
-			println(fmt.Sprintf("loss = %v", loss.Sum()))
-			rnn.Add(train, x, network.TmpOutput[len(network.TmpOutput)-1])
-			rnn.Add(evolve, x, network_evolve.TmpOutput[len(network_evolve.TmpOutput)-1])
-			xx = append(xx, x)
-			//save(weights)
-		} else {
-			output := network.Predict(xmath.Vec(1).With(y))
-			rnn.Add(train, x, output[0])
-			evolveOutput := network_evolve.Predict(xmath.Vec(1).With(lastOutput))
-			lastOutput = evolveOutput[0]
-			rnn.Add(evolve, x, evolveOutput[0])
-		}
-		dummyOutput := network_dummy.Predict(xmath.Vec(1).With(y))
-		rnn.Add(dummy, x, dummyOutput[0])
-
+	// init networks
+	cap := map[string]Capture{
+		sin:    &OutputCapture{network: &VoidNetwork{}},
+		train:  &OutputCapture{network: NewRNNValueNetwork(10, 10)},
+		dummy:  &DummyCapture{OutputCapture{network: NewRNNValueNetwork(10, 10)}},
+		evolve: &EvolutionCapture{OutputCapture{network: NewRNNValueNetwork(10, 10)}},
 	}
 
+	// this will capture almost one full cycle for 25 events
+	Train(X(0.03), Sine, data, cap)
+
 	// draw the data collection
-	graph.Draw("sin", rnn)
+	data.Export("sin")
 
-}
-
-func evolveSine(i int, x float64) float64 {
-	return math.Sin(x)
-}
-
-// evolveSineVar reveals the shortcomings of an RNN,
-// not being able to capture variations in period.
-func evolveSineVar(i int, x float64) float64 {
-	return 0.3*math.Sin(x) + 0.3*math.Sin(2*x) + 0.3*math.Sin(5*x)
 }
 
 const fileName = "examples/rnn-sine/data/results.json"

@@ -12,17 +12,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rs/zerolog"
-
-	"github.com/drakos74/go-ex-machina/xmachina/net"
-
-	"github.com/drakos74/go-ex-machina/xmath"
-
-	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
-
 	"github.com/drakos74/go-ex-machina/xmachina"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
+	"github.com/drakos74/go-ex-machina/xmachina/net"
+	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
+	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -48,7 +43,7 @@ func main() {
 				WithActivation(ml.TanH)).
 			WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).
 			Factory(net.NewActivationCell)).
-		Add(10, net.NewBuilder().Factory(net.NewSoftCell))
+		Add(10, net.NewBuilder().CellFactory(net.NewSoftCell))
 
 	data := make(xmachina.Data)
 

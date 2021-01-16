@@ -5,6 +5,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/drakos74/go-ex-machina/xmachina/net"
+
 	"github.com/drakos74/go-ex-machina/xmath"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
@@ -17,7 +19,7 @@ func Test_RNetworkSineFunc(t *testing.T) {
 		WithWeights(xmath.RangeSqrt(-1, 1)(30), xmath.RangeSqrt(-1, 1)(30)).
 		WithActivation(ml.TanH, ml.Sigmoid)
 
-	network := New(20, builder, Clip{
+	network := New(20, builder, net.Clip{
 		W: 0.5,
 		B: 0.5,
 	})
@@ -30,7 +32,8 @@ func Test_RNetworkSineFunc(t *testing.T) {
 		x := f * float64(i)
 
 		s := math.Sin(x)
-		err, _ = network.Train(xmath.Vec(1).With(s))
+		output := xmath.Vec(1)
+		err, _ = network.Train(xmath.Vec(1).With(s), output)
 		println(fmt.Sprintf("err = %v", err.Op(math.Abs).Sum()))
 	}
 

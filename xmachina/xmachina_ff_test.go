@@ -100,7 +100,7 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 		outputSet[i] = out
 	}
 
-	TrainInMem(Training(0.0001, 10000), network, inputSet, outputSet)
+	TrainInMem(Training(0.001, 10000), network, inputSet, outputSet)
 
 	// check trained network performance
 
@@ -131,7 +131,7 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
 			Factory(net.NewActivationCell)) // output layer
 
-	data := make(Data)
+	data := make(DataSource)
 	defer close(data)
 
 	config := StreamingTraining(Training(0.0001, 100), 1, 1000)
@@ -170,7 +170,7 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
 		Add(1, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
 
-	data := make(Data)
+	data := make(DataSource)
 	defer close(data)
 
 	config := StreamingTraining(Training(0.0001, 100), 1, 1000)
@@ -258,7 +258,7 @@ func TestNetwork_BinaryClassification2D_InMem(t *testing.T) {
 		outputSet[i] = out
 	}
 
-	TrainInMem(Training(0.000001, 10000), network, inputSet, outputSet)
+	TrainInMem(Training(0.00001, 10000), network, inputSet, outputSet)
 
 	// check trained network performance
 

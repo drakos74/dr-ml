@@ -5,6 +5,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/drakos74/go-ex-machina/xmachina/net"
+
 	"github.com/drakos74/go-ex-machina/xmath"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
@@ -16,7 +18,7 @@ func TestRNNLayer_Forward(t *testing.T) {
 	builder := testNeuronBuilder(1, 1, 100).
 		WithWeights(xmath.RangeSqrt(-1, 1)(10), xmath.RangeSqrt(-1, 1)(10))
 
-	layer := NewLayer(5, *builder, Clip{
+	layer := NewLayer(5, *builder, net.Clip{
 		W: 1,
 		B: 1,
 	}, 0)
@@ -87,7 +89,7 @@ func TestRNNLayer_Train(t *testing.T) {
 
 func trainLayer(t *testing.T, n int, builder NeuronBuilder, input, output xmath.Matrix, threshold int) {
 
-	layer := NewLayer(n, builder, Clip{
+	layer := NewLayer(n, builder, net.Clip{
 		W: 1,
 		B: 1,
 	}, 0)

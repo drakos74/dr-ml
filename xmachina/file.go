@@ -12,7 +12,7 @@ import (
 	"github.com/drakos74/go-ex-machina/xmath"
 )
 
-func ReadFile(filename string, lines int, iterations int, parse func(record []string) (inp, out xmath.Vector), data Data, epoch Epoch, ack Ack) (inputSet, outputSet xmath.Matrix, readErr error) {
+func ReadFile(filename string, lines int, iterations int, parse func(record []string) (inp, out xmath.Vector), data DataSource, epoch Epoch, ack Ack) (inputSet, outputSet xmath.Matrix, readErr error) {
 
 	// TODO: fix this ugliness with the line parameter
 	if lines > 0 {

@@ -17,7 +17,7 @@ type Pair struct {
 
 type Ack chan error
 
-type Data chan Pair
+type DataSource chan Pair
 
 type Epoch chan int
 
@@ -106,7 +106,7 @@ func TrainInMem(config InMemTraining, network net.NN, inputSet xmath.Matrix, out
 	}
 }
 
-func TrainInStream(ctx context.Context, config InStreamTraining, network net.NN, data Data, ack Ack) {
+func TrainInStream(ctx context.Context, config InStreamTraining, network net.NN, data DataSource, ack Ack) {
 
 	defer close(ack)
 
