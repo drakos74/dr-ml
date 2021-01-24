@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/drakos74/go-ex-machina/examples/recurrent"
-	"github.com/drakos74/go-ex-machina/oremi"
 	"github.com/drakos74/go-ex-machina/xmachina"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
@@ -45,8 +44,8 @@ func main() {
 	//}
 
 	// init graphs
-	data := oremi.New("RNN").
-		//data := xmachina.VoidSet().
+	//data := oremi.New("RNN").
+	data := xmachina.VoidSet().
 		Init([]xmachina.Set{
 			{Name: sin, X: "x", Y: "y"},
 			{Name: buffer, X: "x", Y: "y"},
@@ -57,7 +56,7 @@ func main() {
 		}...)
 
 	bufferSize := 250
-	layerSize := 100
+	layerSize := 10
 	// init networks
 	cap := map[string]recurrent.Capture{
 		sin:   &recurrent.OutputCapture{Network: &recurrent.VoidNetwork{}},

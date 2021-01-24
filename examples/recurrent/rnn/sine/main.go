@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/drakos74/go-ex-machina/examples/recurrent"
-	"github.com/drakos74/go-ex-machina/oremi"
 	"github.com/drakos74/go-ex-machina/xmachina"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
@@ -44,8 +43,8 @@ func main() {
 	//}
 
 	// init graphs
-	data := oremi.New("RNN").
-		//data := xmachina.VoidSet().
+	//data := oremi.New("RNN").
+	data := xmachina.VoidSet().
 		Init([]xmachina.Set{
 			{Name: sin, X: "x", Y: "y"},
 			{Name: train, X: "x", Y: "y"},
