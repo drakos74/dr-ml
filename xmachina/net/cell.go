@@ -1,6 +1,8 @@
 package net
 
-import "github.com/drakos74/go-ex-machina/xmath"
+import (
+	"github.com/drakos74/go-ex-machina/xmath"
+)
 
 // Op represents a generic operation on a vector.
 type Op interface {
@@ -41,15 +43,15 @@ type StackCell struct {
 	border int
 }
 
-// TODO : add dimension arguments to cells
 // NewStackCell creates a new stack cell.
-func NewStackCell() *StackCell {
-	return &StackCell{}
+func NewStackCell(border int) *StackCell {
+	return &StackCell{
+		border: border,
+	}
 }
 
 // Fwd applies the operation.
 func (s *StackCell) Fwd(a, b xmath.Vector) xmath.Vector {
-	s.border = len(a)
 	return a.Stack(b)
 }
 

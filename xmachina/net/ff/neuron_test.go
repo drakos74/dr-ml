@@ -5,9 +5,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/rs/zerolog"
-
 	"github.com/drakos74/go-ex-machina/xmath"
+
+	"github.com/rs/zerolog"
 
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 

@@ -275,3 +275,13 @@ func (sw *SizeWindow) Push(v float64) (*Bucket, bool) {
 	return nil, false
 
 }
+
+// Inp keeps all rows of a matrix except the last.
+func Inp(s Matrix) Matrix {
+	return Mat(len(s) - 1).With(s[:len(s)-1]...)
+}
+
+// Outp keeps all rows of a matrix except for the first.
+func Outp(s Matrix) Matrix {
+	return Mat(len(s) - 1).With(s[1:]...)
+}

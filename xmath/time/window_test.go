@@ -51,9 +51,6 @@ func TestSequence_Get(t *testing.T) {
 	}
 
 	println(fmt.Sprintf("seq = %v", s))
-	println(fmt.Sprintf("inp = %v", Inp(s)))
-	println(fmt.Sprintf("outp = %v", Outp(s)))
-
 	println(fmt.Sprintf("s = %v", s))
 
 }

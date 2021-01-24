@@ -12,11 +12,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/drakos74/go-ex-machina/xmath"
+
 	"github.com/drakos74/go-ex-machina/xmachina"
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
-	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/rs/zerolog"
 )
 
@@ -45,7 +46,7 @@ func main() {
 			Factory(net.NewActivationCell)).
 		Add(10, net.NewBuilder().CellFactory(net.NewSoftCell))
 
-	data := make(xmachina.Data)
+	data := make(xmachina.DataSource)
 
 	config := xmachina.StreamingTraining(xmachina.Training(0.1, 1), 10, 1000)
 

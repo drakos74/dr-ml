@@ -3,8 +3,9 @@ package net
 import (
 	"fmt"
 
-	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmath"
+
+	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/rs/zerolog/log"
 )
 
@@ -120,6 +121,40 @@ func (n ActivationCell) Meta() Meta {
 // Weights returns all the required constants needed to re-build the neuron state.
 func (n ActivationCell) Weights() *Weights {
 	return n.weights
+}
+
+// NoOpCell is a neuron cell that does not do anything.
+type NoOpCell struct {
+	meta Meta
+}
+
+// TODO : move to an Op , as it has no weights
+// NoOp creates a new no-op cell.
+func NoOp(n, m int, meta Meta) Neuron {
+	if n != m {
+		panic(fmt.Sprintf("cannot make a no-op cell with different input and output sizes %v vs %v", n, m))
+	}
+	return &NoOpCell{meta: meta}
+}
+
+// Fwd propagates the input as output.
+func (n *NoOpCell) Fwd(x xmath.Vector) xmath.Vector {
+	return x
+}
+
+// Bwd propagates the input as output.
+func (n *NoOpCell) Bwd(dy xmath.Vector) xmath.Vector {
+	return dy
+}
+
+// Meta returns the metadata for the cell.
+func (n *NoOpCell) Meta() Meta {
+	return n.meta
+}
+
+// Weights returns no weights, as this is a no-op cell.
+func (n *NoOpCell) Weights() *Weights {
+	return nil
 }
 
 // TODO : move to an Op , as it has no weights

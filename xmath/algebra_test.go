@@ -129,3 +129,77 @@ func Test_T(t *testing.T) {
 	println(fmt.Sprintf("matT = %v", matT))
 
 }
+
+var testDiv = func(matrix Matrix) Matrix {
+	// we want to make out of this sequence of vectors a 1 d longer vector with the direction
+	// TODO : abstract into an xmath operation
+	l := len(matrix) - 1
+	mat := Mat(l)
+	j := 0
+	for i := l; i > 0; i-- {
+		w := Vec(2)
+		diff := matrix[i][0] - matrix[i-1][0]
+		if diff > 0 {
+			w[0] = 1
+		} else if diff < 0 {
+			w[1] = 1
+		}
+		j++
+		index := l - j
+		mat[index] = w
+	}
+	return mat
+}
+
+func Test_Div(t *testing.T) {
+
+	type test struct {
+		matrix Matrix
+	}
+
+	tests := map[string]test{
+		"all-up": {
+			matrix: []Vector{
+				{0},
+				{1},
+				{2},
+				{3},
+				{4},
+			},
+		},
+		"all-down": {
+			matrix: []Vector{
+				{5},
+				{4},
+				{3},
+				{2},
+				{1},
+			},
+		},
+		"up-and-down": {
+			matrix: []Vector{
+				{0},
+				{2},
+				{4},
+				{8},
+				{10},
+				{9},
+				{5},
+				{1},
+				{0},
+				{1},
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			nat := tt.matrix.T().Vop(Diff, UpOrDown)
+			println(fmt.Sprintf("nat = %+v", nat))
+
+			mat := testDiv(tt.matrix)
+			println(fmt.Sprintf("mat = %+v", mat))
+		})
+	}
+
+}

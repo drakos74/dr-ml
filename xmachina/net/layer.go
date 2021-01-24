@@ -71,5 +71,22 @@ type RecurrentLayer interface {
 
 // Clip defines the clipping range for weights
 type Clip struct {
-	W, B float64
+	W, B             float64
+	wClipOp, bClipOp xmath.Op
+}
+
+// NewClip creates a new clip operation struct.
+func NewClip(w, b float64) Clip {
+	return Clip{
+		W:       w,
+		B:       b,
+		wClipOp: xmath.Clip(-1*w, 1*w),
+		bClipOp: xmath.Clip(-1*b, 1*b),
+	}
+}
+
+// Apply applies the clipping to the weights.
+func (c Clip) Apply(weights *Weights) {
+	weights.W = weights.W.Op(c.wClipOp)
+	weights.B = weights.B.Op(c.bClipOp)
 }

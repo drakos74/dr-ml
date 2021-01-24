@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drakos74/go-ex-machina/xmath"
+
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/rs/zerolog"
-
-	"github.com/drakos74/go-ex-machina/xmath"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/stretchr/testify/assert"
