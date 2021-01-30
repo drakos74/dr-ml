@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath/algebra"
-
+	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,7 +32,7 @@ func TestVectorRing_Add(t *testing.T) {
 	w := NewVectorRing(10)
 
 	for i := 1; i < 25; i++ {
-		batch, isReady := w.Push(algebra.Vec(1).With(float64(i)))
+		batch, isReady := w.Push(xmath.Vec(1).With(float64(i)))
 		if i < size {
 			assert.False(t, isReady)
 		} else {
@@ -61,10 +60,10 @@ func TestSequence_Get(t *testing.T) {
 
 	const l = 10
 
-	s := algebra.Mat(l)
+	s := xmath.Mat(l)
 
 	for i := 0; i < l; i++ {
-		s[i] = algebra.Vec(1).With(float64(i))
+		s[i] = xmath.Vec(1).With(float64(i))
 	}
 
 	println(fmt.Sprintf("seq = %v", s))

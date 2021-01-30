@@ -11,13 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drakos74/go-ex-machina/xmath/algebra"
-
-	"github.com/rs/zerolog"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
+	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,12 +32,12 @@ func TestNetwork_BinaryClassificationSimple(t *testing.T) {
 				WithModule(ml.Base().
 					WithRate(ml.Learn(0.05, 0.05)).
 					WithActivation(ml.Sigmoid)).
-				WithWeights(algebra.Rand(0, 1, algebra.Unit), algebra.Rand(0, 1, algebra.Unit)).
+				WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
 				Factory(net.NewActivationCell),
 		) // output layer
 
-	inputSet := algebra.Mat(2).With([]float64{1, 0}, []float64{0, 1})
-	outputSet := algebra.Mat(2).With([]float64{0, 1}, []float64{1, 0})
+	inputSet := xmath.Mat(2).With([]float64{1, 0}, []float64{0, 1})
+	outputSet := xmath.Mat(2).With([]float64{0, 1}, []float64{1, 0})
 
 	TrainInMem(Training(0.001, 10000), network, inputSet, outputSet)
 
@@ -61,13 +59,13 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 			WithModule(ml.Base().
 				WithRate(ml.Learn(0.05, 0.05)).
 				WithActivation(ml.Sigmoid)).
-			WithWeights(algebra.Rand(0, 1, algebra.Unit), algebra.Rand(0, 1, algebra.Unit)).
+			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
 			Factory(net.NewActivationCell)). // hidden layer
 		Add(1, net.NewBuilder().
 			WithModule(ml.Base().
 				WithRate(ml.Learn(0.05, 0.05)).
 				WithActivation(ml.Sigmoid)).
-			WithWeights(algebra.Rand(0, 1, algebra.Unit), algebra.Rand(0, 1, algebra.Unit)).
+			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
 			Factory(net.NewActivationCell)) // output layer
 
 	// parse the input data
@@ -79,12 +77,12 @@ func TestNetwork_BinaryClassificationInMem(t *testing.T) {
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
 
-	inputSet := algebra.Mat(len(records))
-	outputSet := algebra.Mat(len(records))
+	inputSet := xmath.Mat(len(records))
+	outputSet := xmath.Mat(len(records))
 
 	for i, record := range records {
-		inp := algebra.Vec(len(record) - 1)
-		out := algebra.Vec(len(record) - 2)
+		inp := xmath.Vec(len(record) - 1)
+		out := xmath.Vec(len(record) - 2)
 
 		for j, value := range record {
 			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
@@ -123,13 +121,13 @@ func TestNetwork_BinaryClassificationStream(t *testing.T) {
 			WithModule(ml.Base().
 				WithRate(ml.Learn(0.05, 0.05)).
 				WithActivation(ml.Sigmoid)).
-			WithWeights(algebra.Rand(0, 1, algebra.Unit), algebra.Rand(0, 1, algebra.Unit)).
+			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
 			Factory(net.NewActivationCell)). // hidden layer
 		Add(1, net.NewBuilder().
 			WithModule(ml.Base().
 				WithRate(ml.Learn(0.05, 0.05)).
 				WithActivation(ml.Sigmoid)).
-			WithWeights(algebra.Rand(0, 1, algebra.Unit), algebra.Rand(0, 1, algebra.Unit)).
+			WithWeights(xmath.Rand(0, 1, xmath.Unit), xmath.Rand(0, 1, xmath.Unit)).
 			Factory(net.NewActivationCell)) // output layer
 
 	data := make(DataSource)
@@ -168,8 +166,8 @@ func TestXNetwork_BinaryClassificationStream(t *testing.T) {
 	start := time.Now().UnixNano()
 	// build the network
 	network := ff.XNew(2, 1).
-		Add(2, ff.Perceptron(ml.Base(), algebra.Rand(0, 1, algebra.Unit))). // hidden layer
-		Add(1, ff.Perceptron(ml.Base(), algebra.Rand(0, 1, algebra.Unit)))  // output layer
+		Add(2, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit))). // hidden layer
+		Add(1, ff.Perceptron(ml.Base(), xmath.Rand(0, 1, xmath.Unit)))  // output layer
 
 	data := make(DataSource)
 	defer close(data)
@@ -211,13 +209,13 @@ func TestNetwork_BinaryClassification2D_InMem(t *testing.T) {
 				WithModule(ml.Base().
 					WithRate(ml.Learn(5, 0.05)).
 					WithActivation(ml.Sigmoid)).
-				WithWeights(algebra.Rand(-1, 1, algebra.Unit), algebra.Rand(-1, 1, algebra.Unit)).
+				WithWeights(xmath.Rand(-1, 1, xmath.Unit), xmath.Rand(-1, 1, xmath.Unit)).
 				Factory(net.NewActivationCell)).
 		Add(2, net.NewBuilder().
 			WithModule(ml.Base().
 				WithRate(ml.Learn(5, 0.05)).
 				WithActivation(ml.Sigmoid)).
-			WithWeights(algebra.Rand(-1, 1, algebra.Unit), algebra.Rand(-1, 1, algebra.Unit)).
+			WithWeights(xmath.Rand(-1, 1, xmath.Unit), xmath.Rand(-1, 1, xmath.Unit)).
 			Factory(net.NewActivationCell))
 	//.AddSoftMax()
 
@@ -230,12 +228,12 @@ func TestNetwork_BinaryClassification2D_InMem(t *testing.T) {
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
 
-	inputSet := algebra.Mat(len(records))
-	outputSet := algebra.Mat(len(records))
+	inputSet := xmath.Mat(len(records))
+	outputSet := xmath.Mat(len(records))
 
 	for i, record := range records {
-		inp := algebra.Vec(2)
-		out := algebra.Vec(2)
+		inp := xmath.Vec(2)
+		out := xmath.Vec(2)
 
 		for j, value := range record {
 			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
@@ -272,9 +270,9 @@ func TestNetwork_BinaryClassification2D_InMem(t *testing.T) {
 
 }
 
-func parseBinClassLine(record []string) (inp, out algebra.Vector) {
-	inp = algebra.Vec(len(record) - 1)
-	out = algebra.Vec(len(record) - 2)
+func parseBinClassLine(record []string) (inp, out xmath.Vector) {
+	inp = xmath.Vec(len(record) - 1)
+	out = xmath.Vec(len(record) - 2)
 
 	for j, value := range record {
 		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)

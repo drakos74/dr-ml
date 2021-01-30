@@ -9,11 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath/algebra"
-
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmachina/net/ff"
+	"github.com/drakos74/go-ex-machina/xmath"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,13 +24,13 @@ func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 			WithModule(ml.Base().
 				WithRate(ml.Learn(0.5, 0.05)).
 				WithActivation(ml.Sigmoid)).
-			WithWeights(algebra.Rand(-1, 1, algebra.Unit), algebra.Rand(-1, 1, algebra.Unit)).
+			WithWeights(xmath.Rand(-1, 1, xmath.Unit), xmath.Rand(-1, 1, xmath.Unit)).
 			Factory(net.NewActivationCell)). // hidden layer
 		Add(1, net.NewBuilder().
 			WithModule(ml.Base().
 				WithRate(ml.Learn(0.5, 0.05)).
 				WithActivation(ml.Sigmoid)).
-			WithWeights(algebra.Rand(-1, 1, algebra.Unit), algebra.Rand(-1, 1, algebra.Unit)).
+			WithWeights(xmath.Rand(-1, 1, xmath.Unit), xmath.Rand(-1, 1, xmath.Unit)).
 			Factory(net.NewActivationCell)) // output layer
 
 	// parse the input data
@@ -43,12 +42,12 @@ func TestNetwork_BinaryClassificationInMem_Benchmark(t *testing.T) {
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
 
-	inputSet := algebra.Mat(len(records))
-	outputSet := algebra.Mat(len(records))
+	inputSet := xmath.Mat(len(records))
+	outputSet := xmath.Mat(len(records))
 
 	for i, record := range records {
-		inp := algebra.Vec(len(record) - 1)
-		out := algebra.Vec(len(record) - 2)
+		inp := xmath.Vec(len(record) - 1)
+		out := xmath.Vec(len(record) - 2)
 
 		for j, value := range record {
 			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
