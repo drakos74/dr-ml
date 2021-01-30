@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/drakos74/go-ex-machina/xmath/algebra"
 
 	"github.com/rs/zerolog"
 
@@ -23,24 +23,24 @@ func TestActivationCell_FwdAndBwd(t *testing.T) {
 	yDim := 3
 
 	factory := NewBuilder().
-		WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+		WithWeights(algebra.Const(0.5), algebra.Const(0.5)).
 		WithModule(ml.Base().WithRate(ml.Learn(1, 1))).
 		Factory(NewActivationCell)
 
 	neuron := factory(xDim, yDim, Meta{})
 
 	weights := neuron.Weights()
-	vec := xmath.Vec(xDim).With(0.5, 0.5)
+	vec := algebra.Vec(xDim).With(0.5, 0.5)
 	// weights should be a 2x3 matrix
-	assert.Equal(t, xmath.Mat(yDim).With(vec, vec, vec), weights.W)
+	assert.Equal(t, algebra.Mat(yDim).With(vec, vec, vec), weights.W)
 	// bias should be same as the output dimension
-	assert.Equal(t, xmath.Vec(yDim).With(0.5, 0.5, 0.5), weights.B)
+	assert.Equal(t, algebra.Vec(yDim).With(0.5, 0.5, 0.5), weights.B)
 
 	// expected output
-	y := xmath.Vec(3).With(0.25, 0.5, 0.25)
+	y := algebra.Vec(3).With(0.25, 0.5, 0.25)
 
 	// do a forward pass ...
-	x := xmath.Vec(2).With(0.9, 0.1)
+	x := algebra.Vec(2).With(0.9, 0.1)
 	ty := neuron.Fwd(x)
 	// all dimensions of the output should be the same
 	for i := 1; i < len(ty); i++ {
@@ -71,7 +71,7 @@ func TestActivationCell_FwdAndBwd(t *testing.T) {
 	assert.True(t, lossEpoch1 > lossEpoch2)
 }
 
-func trainErr(expected, actual xmath.Vector) (xmath.Vector, float64) {
+func trainErr(expected, actual algebra.Vector) (algebra.Vector, float64) {
 	err := ml.Diff(expected, actual)
 	println(fmt.Sprintf("err = %v", err))
 	loss := err.Op(math.Abs).Sum()
@@ -168,7 +168,7 @@ func TestActivationNeuron(t *testing.T) {
 			model := ml.Base().
 				WithActivation(activation).
 				WithRate(tt.rate)
-			neuron := NewActivationCell(len(tt.inp), len(tt.outp), *model, NewWeights(len(tt.inp), len(tt.outp), xmath.Const(0.5), xmath.Const(0.5)), Meta{})
+			neuron := NewActivationCell(len(tt.inp), len(tt.outp), *model, NewWeights(len(tt.inp), len(tt.outp), algebra.Const(0.5), algebra.Const(0.5)), Meta{})
 			runTest(t, neuron, tt.inp, tt.outp, tt.threshold)
 		})
 	}
@@ -180,24 +180,24 @@ func TestWeightCell_FwdAndBwd(t *testing.T) {
 	yDim := 3
 
 	factory := NewBuilder().
-		WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+		WithWeights(algebra.Const(0.5), algebra.Const(0.5)).
 		WithModule(ml.Base().WithRate(ml.Learn(1, 1))).
 		Factory(NewWeightCell)
 
 	neuron := factory(xDim, yDim, Meta{})
 
 	weights := neuronWeights(neuron)
-	vec := xmath.Vec(xDim).With(0.5, 0.5)
+	vec := algebra.Vec(xDim).With(0.5, 0.5)
 	// weights should be a 2x3 matrix
-	assert.Equal(t, xmath.Mat(yDim).With(vec, vec, vec), weights.W)
+	assert.Equal(t, algebra.Mat(yDim).With(vec, vec, vec), weights.W)
 	// bias should be same as the output dimension
-	assert.Equal(t, xmath.Vec(yDim).With(0.5, 0.5, 0.5), weights.B)
+	assert.Equal(t, algebra.Vec(yDim).With(0.5, 0.5, 0.5), weights.B)
 
 	// expected output
-	y := xmath.Vec(3).With(0.25, 0.5, 0.25)
+	y := algebra.Vec(3).With(0.25, 0.5, 0.25)
 
 	// do a forward pass ...
-	x := xmath.Vec(2).With(0.9, 0.3)
+	x := algebra.Vec(2).With(0.9, 0.3)
 	ty := neuron.Fwd(x)
 	println(fmt.Sprintf("ty = %v", ty))
 	// all dimensions of the output should be the same
@@ -308,7 +308,7 @@ func TestWeightNeuron(t *testing.T) {
 
 			model := ml.Base().
 				WithRate(tt.rate)
-			neuron := NewWeightCell(len(tt.inp), len(tt.outp), *model, NewWeights(len(tt.inp), len(tt.outp), xmath.Const(0.5), xmath.VoidVector), Meta{})
+			neuron := NewWeightCell(len(tt.inp), len(tt.outp), *model, NewWeights(len(tt.inp), len(tt.outp), algebra.Const(0.5), algebra.VoidVector), Meta{})
 			runTest(t, neuron, tt.inp, tt.outp, tt.threshold)
 		})
 	}
@@ -398,11 +398,11 @@ func TestSoftNeuron(t *testing.T) {
 	}
 }
 
-func runTest(t *testing.T, neuron Neuron, inp, outp xmath.Vector, threshold int) {
-	var diff xmath.Vector
+func runTest(t *testing.T, neuron Neuron, inp, outp algebra.Vector, threshold int) {
+	var diff algebra.Vector
 	for i := 0; i < threshold; i++ {
 		out := neuron.Fwd(inp)
-		expOutp := xmath.Vec(len(outp)).With(outp...)
+		expOutp := algebra.Vec(len(outp)).With(outp...)
 		newDiff := expOutp.Diff(out)
 		// compare previous error to current ... it should be decreasing ALWAYS
 		// ... for pre-defined networks as in this case in the tests
@@ -430,7 +430,7 @@ func runTest(t *testing.T, neuron Neuron, inp, outp xmath.Vector, threshold int)
 	// do a second pass to make sure we dont cause exploding gradients
 	for i := 0; i < threshold; i++ {
 		out := neuron.Fwd(inp)
-		expOutp := xmath.Vec(len(outp)).With(outp...)
+		expOutp := algebra.Vec(len(outp)).With(outp...)
 		newDiff := expOutp.Diff(out)
 		diff = newDiff
 		neuron.Bwd(diff)

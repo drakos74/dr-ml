@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/drakos74/go-ex-machina/xmath/algebra"
 
 	"github.com/drakos74/go-ex-machina/xmachina/net/rc"
 
@@ -16,23 +16,23 @@ import (
 
 func Test_RNNetworkSineFunc(t *testing.T) {
 
-	builder := NewNeuronBuilder(1, 1, 30).
+	builder := rc.NewNeuronBuilder(1, 1, 30).
 		WithRate(*ml.Rate(0.05)).
-		WithWeights(xmath.RangeSqrt(-1, 1)(30), xmath.RangeSqrt(-1, 1)(30)).
+		WithWeights(algebra.RangeSqrt(-1, 1)(30), algebra.RangeSqrt(-1, 1)(30)).
 		WithActivation(ml.TanH, ml.Sigmoid)
 
 	network := rc.New(20, New(*builder), net.NewClip(0.5, 0.5))
 	println(fmt.Sprintf("network = %v", network))
 	f := 0.025
 
-	var err xmath.Vector
+	var err algebra.Vector
 	for i := 0; i < 1000; i++ {
 
 		x := f * float64(i)
 
 		s := math.Sin(x)
-		output := xmath.Vec(1)
-		err, _ = network.Train(xmath.Vec(1).With(s), output)
+		output := algebra.Vec(1)
+		err, _ = network.Train(algebra.Vec(1).With(s), output)
 		println(fmt.Sprintf("err = %v", err.Op(math.Abs).Sum()))
 	}
 

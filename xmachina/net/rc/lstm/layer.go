@@ -56,9 +56,9 @@ func New(builder rc.NeuronBuilder) rc.LayerFactory {
 	}
 }
 
-// Forward pushes the input through the layer
-// x is the input
-// rows of x are the input values at different time instances
+// Forward pushes the xmath.ut through the layer
+// x is the xmath.ut
+// rows of x are the xmath.ut values at different time instances
 // e.g. x[0] , x[1] , x[2] etc ...
 func (l *Layer) Forward(x xmath.Matrix) xmath.Matrix {
 

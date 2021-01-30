@@ -1,4 +1,6 @@
-package xmath
+package series
+
+import "github.com/drakos74/go-ex-machina/xmath"
 
 type Evolution struct {
 	i            int
@@ -15,7 +17,7 @@ func NewEvolution(procedures ...*Sequence) *Evolution {
 		parameters[i] = proc.Run()
 	}
 
-	combinations := CartesianProduct(parameters, 0, len(parameters))
+	combinations := xmath.CartesianProduct(parameters, 0, len(parameters))
 
 	return &Evolution{
 		combinations: combinations,
@@ -24,12 +26,12 @@ func NewEvolution(procedures ...*Sequence) *Evolution {
 
 }
 
-// Limit returns the amount of iterations defined in this evolution
+// Limit returns the amount of iterations defined in this series
 func (e *Evolution) Limit() int {
 	return len(e.combinations)
 }
 
-// Current returns the current state of the evolution
+// Current returns the current state of the series
 func (e *Evolution) Current() int {
 	return e.i
 }
@@ -126,12 +128,12 @@ type Transform func(v float64) float64
 
 func IncNum(w float64, rounding int) Transform {
 	return func(v float64) float64 {
-		return Round(rounding)(v + w)
+		return xmath.Round(rounding)(v + w)
 	}
 }
 
 func IncMul(w float64, rounding int) Transform {
 	return func(v float64) float64 {
-		return Round(rounding)(v * w)
+		return xmath.Round(rounding)(v * w)
 	}
 }

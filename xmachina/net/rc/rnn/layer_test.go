@@ -5,7 +5,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/drakos74/go-ex-machina/xmachina/net/rc"
+
+	"github.com/drakos74/go-ex-machina/xmath/algebra"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
@@ -15,18 +17,18 @@ import (
 func TestRNNLayer_Forward(t *testing.T) {
 
 	builder := testNeuronBuilder(1, 1, 100).
-		WithWeights(xmath.RangeSqrt(-1, 1)(10), xmath.RangeSqrt(-1, 1)(10))
+		WithWeights(algebra.RangeSqrt(-1, 1)(10), algebra.RangeSqrt(-1, 1)(10))
 
 	layer := New(*builder)(5, net.NewClip(1, 1), 0)
 
 	// 2 is the lookback rate e.g. 2 neurons, 2 time instances are tracked
 	// each timeinstance
-	input := xmath.Mat(5).With(
-		xmath.Vec(1).With(0.1),
-		xmath.Vec(1).With(0.2),
-		xmath.Vec(1).With(0.3),
-		xmath.Vec(1).With(0.4),
-		xmath.Vec(1).With(0.5),
+	input := algebra.Mat(5).With(
+		algebra.Vec(1).With(0.1),
+		algebra.Vec(1).With(0.2),
+		algebra.Vec(1).With(0.3),
+		algebra.Vec(1).With(0.4),
+		algebra.Vec(1).With(0.5),
 	)
 
 	output := layer.Forward(input)
@@ -40,8 +42,8 @@ func TestRNNLayer_Train(t *testing.T) {
 	type test struct {
 		n, x, y, h                      int
 		rate                            ml.Learning
-		weightsGenerator, biasGenerator xmath.VectorGenerator
-		input, output                   xmath.Matrix
+		weightsGenerator, biasGenerator algebra.VectorGenerator
+		input, output                   algebra.Matrix
 		threshold                       int
 	}
 
@@ -52,21 +54,21 @@ func TestRNNLayer_Train(t *testing.T) {
 			y:                1,
 			h:                20,
 			rate:             *ml.Learn(0.5, 0.5),
-			weightsGenerator: xmath.RangeSqrt(-1, 1)(20),
-			biasGenerator:    xmath.RangeSqrt(-1, 1)(20),
-			input: xmath.Mat(5).With(
-				xmath.Vec(1).With(0.1),
-				xmath.Vec(1).With(0.2),
-				xmath.Vec(1).With(0.3),
-				xmath.Vec(1).With(0.4),
-				xmath.Vec(1).With(0.5),
+			weightsGenerator: algebra.RangeSqrt(-1, 1)(20),
+			biasGenerator:    algebra.RangeSqrt(-1, 1)(20),
+			input: algebra.Mat(5).With(
+				algebra.Vec(1).With(0.1),
+				algebra.Vec(1).With(0.2),
+				algebra.Vec(1).With(0.3),
+				algebra.Vec(1).With(0.4),
+				algebra.Vec(1).With(0.5),
 			),
-			output: xmath.Mat(5).With(
-				xmath.Vec(1).With(0.1),
-				xmath.Vec(1).With(0.2),
-				xmath.Vec(1).With(0.3),
-				xmath.Vec(1).With(0.2),
-				xmath.Vec(1).With(0.1),
+			output: algebra.Mat(5).With(
+				algebra.Vec(1).With(0.1),
+				algebra.Vec(1).With(0.2),
+				algebra.Vec(1).With(0.3),
+				algebra.Vec(1).With(0.2),
+				algebra.Vec(1).With(0.1),
 			),
 			threshold: 3000,
 		},
@@ -83,7 +85,7 @@ func TestRNNLayer_Train(t *testing.T) {
 
 }
 
-func trainLayer(t *testing.T, n int, builder NeuronBuilder, input, output xmath.Matrix, threshold int) {
+func trainLayer(t *testing.T, n int, builder rc.NeuronBuilder, input, output algebra.Matrix, threshold int) {
 
 	layer := New(builder)(n, net.NewClip(1, 1), 0)
 

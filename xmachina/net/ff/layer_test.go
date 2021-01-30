@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/drakos74/go-ex-machina/xmath/algebra"
 
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/rs/zerolog"
@@ -29,7 +29,7 @@ func TestLayer_LeaningProcess(t *testing.T) {
 	layer := NewLayer(2, 2,
 		net.NewBuilder().
 			WithModule(module).
-			WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+			WithWeights(algebra.Const(0.5), algebra.Const(0.5)).
 			Factory(net.NewActivationCell), 0)
 
 	inp1 := []float64{0, 1}
@@ -40,19 +40,19 @@ func TestLayer_LeaningProcess(t *testing.T) {
 
 	iterations := 10000
 
-	v1 := xmath.Vec(2)
-	v2 := xmath.Vec(2)
+	v1 := algebra.Vec(2)
+	v2 := algebra.Vec(2)
 
 	err := math.MaxFloat64
 	var finishedAt int
 	for i := 0; i < iterations; i++ {
 
 		v1 = layer.Forward(inp1)
-		err1 := xmath.Vec(2).With(exp1...).Diff(v1)
+		err1 := algebra.Vec(2).With(exp1...).Diff(v1)
 		layer.Backward(err1)
 
 		v2 = layer.Forward(inp2)
-		err2 := xmath.Vec(2).With(exp2...).Diff(v2)
+		err2 := algebra.Vec(2).With(exp2...).Diff(v2)
 		layer.Backward(err2)
 
 		loss := err1.Add(err2).Norm()
@@ -88,8 +88,8 @@ func TestLayer_RandomLearningProcessScenarios(t *testing.T) {
 
 		rand.Seed(time.Now().UnixNano())
 		// generate inputs
-		inp := xmath.Mat(2).With(xmath.Rand(0, 1, xmath.Unit)(2, 0), xmath.Rand(0, 1, xmath.Unit)(2, 1))
-		exp := xmath.Mat(2).With(xmath.Rand(0, 1, xmath.Unit)(2, 0), xmath.Rand(0, 1, xmath.Unit)(2, 0))
+		inp := algebra.Mat(2).With(algebra.Rand(0, 1, algebra.Unit)(2, 0), algebra.Rand(0, 1, algebra.Unit)(2, 1))
+		exp := algebra.Mat(2).With(algebra.Rand(0, 1, algebra.Unit)(2, 0), algebra.Rand(0, 1, algebra.Unit)(2, 0))
 
 		assertTraining(t, inp, exp)
 
@@ -97,15 +97,15 @@ func TestLayer_RandomLearningProcessScenarios(t *testing.T) {
 
 }
 
-func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
+func assertTraining(t *testing.T, inp, exp algebra.Matrix) {
 
 	layer := NewLayer(2, 2,
 		net.NewBuilder().
 			WithModule(ml.Base()).
-			WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+			WithWeights(algebra.Const(0.5), algebra.Const(0.5)).
 			Factory(net.NewActivationCell), 0)
 
-	v := xmath.Mat(len(inp))
+	v := algebra.Mat(len(inp))
 
 	errThreshold := 0.0001
 
@@ -113,10 +113,10 @@ func assertTraining(t *testing.T, inp, exp xmath.Matrix) {
 	var finishedAt int
 	i := 0
 	for {
-		loss := xmath.Vec(len(v))
+		loss := algebra.Vec(len(v))
 		for j := 0; j < len(v); j++ {
 			v[j] = layer.Forward(inp[j])
-			err := xmath.Vec(2).With(exp[j]...).Diff(v[j])
+			err := algebra.Vec(2).With(exp[j]...).Diff(v[j])
 			layer.Backward(err)
 			loss = loss.Add(err)
 		}
@@ -152,12 +152,12 @@ func TestFFLayer_WithNoLearning(t *testing.T) {
 	layer := NewLayer(2, 2,
 		net.NewBuilder().
 			WithModule(ml.Base().WithRate(ml.Learn(0, 0))).
-			WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+			WithWeights(algebra.Const(0.5), algebra.Const(0.5)).
 			Factory(net.NewActivationCell), 0)
 
 	inp := []float64{0.3, 0.7}
 
-	out := xmath.Vec(2).With(1, 0)
+	out := algebra.Vec(2).With(1, 0)
 
 	// do one pass to check the output and error
 	output := layer.Forward(inp)

@@ -1,7 +1,9 @@
-package datastruct
+package buffer
 
 import (
 	"math"
+
+	xmath2 "github.com/drakos74/go-ex-machina/xmath"
 )
 
 // Ring acts like a ring buffer keeping the last x elements
@@ -125,4 +127,68 @@ func Pow(p float64) Func {
 	return func(s, v float64) float64 {
 		return s + math.Pow(v, p)
 	}
+}
+
+// VectorRing is a temporary cache of vectors
+// it re-uses a slice of vectors (matrix) and keeps track of the starting index.
+// In that sense it s effectively a ring.
+// A major differentiating factor is the (+1) logic,
+// where the last element is handled separately.
+type VectorRing struct {
+	idx int
+	mem xmath2.Matrix
+}
+
+func NewVectorRing(n int) *VectorRing {
+	return &VectorRing{
+		mem: xmath2.Mat(n),
+	}
+}
+
+func NewSplitVectorRing(n int) *VectorRing {
+	return &VectorRing{
+		mem: xmath2.Mat(n + 1),
+	}
+}
+
+// Push adds an element to the window.
+func (w *VectorRing) Push(v xmath2.Vector) (xmath2.Matrix, bool) {
+	w.mem[w.idx%len(w.mem)] = v
+	w.idx++
+	if w.isReady() {
+		batch := w.batch()
+		return batch, true
+	}
+	return nil, false
+}
+
+// isReady returns true if we completed the batch requirements.
+func (w *VectorRing) isReady() bool {
+	return w.idx >= len(w.mem)
+}
+
+// batch returns the current batch.
+func (w VectorRing) batch() xmath2.Matrix {
+	m := xmath2.Mat(len(w.mem))
+	for i := 0; i < len(w.mem); i++ {
+		ii := w.next(i)
+		m[i] = w.mem[ii]
+	}
+	return m
+}
+
+func (w VectorRing) Copy() VectorRing {
+	m := w.batch()
+	return VectorRing{
+		idx: w.idx,
+		mem: m,
+	}
+}
+
+func (w VectorRing) next(i int) int {
+	return (w.idx + i) % len(w.mem)
+}
+
+func (w VectorRing) Size() int {
+	return len(w.mem)
 }

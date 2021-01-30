@@ -1,4 +1,4 @@
-package datastruct
+package buffer
 
 import (
 	"fmt"
@@ -44,7 +44,8 @@ func TestTimeWindow(t *testing.T) {
 	now := time.Now()
 
 	for i := 0; i < 100; i++ {
-		bucket, ok := window.Push(now.Add(time.Second*time.Duration(i)), float64(i))
+		t, bucket, ok := window.Push(now.Add(time.Second*time.Duration(i)), float64(i))
+		fmt.Println(fmt.Sprintf("t = %+v", t))
 		fmt.Println(fmt.Sprintf("bucket = %+v", bucket))
 		fmt.Println(fmt.Sprintf("ok = %+v", ok))
 
@@ -107,11 +108,12 @@ func TestHistoryWindow_Increasing(t *testing.T) {
 				value := tt.op(i)
 				fmt.Println(fmt.Sprintf("value = %+v", value))
 				// we emulate as if each event is 1 second(s) apart
-				if bucket, ok := window.Push(now.Add(time.Second*time.Duration(i)), value); ok {
+				if t, bucket, ok := window.Push(now.Add(time.Second*time.Duration(i)), value); ok {
+					println(fmt.Sprintf("t = %+v", t))
 					fmt.Println(fmt.Sprintf("i = %+v", i))
-					avg := bucket.Stats().Stats[0].Avg()
-					diff := bucket.Stats().Stats[0].Diff()
-					std := bucket.Stats().Stats[0].StDev()
+					avg := bucket.Values().Stats()[0].Avg()
+					diff := bucket.Values().Stats()[0].Diff()
+					std := bucket.Values().Stats()[0].StDev()
 					size := bucket.Size()
 					fmt.Println(fmt.Sprintf("diff/avg = %+v", diff/avg))
 					fmt.Println(fmt.Sprintf("avg = %+v", avg))
@@ -121,7 +123,7 @@ func TestHistoryWindow_Increasing(t *testing.T) {
 				}
 
 				values := window.Get(func(bucket *Bucket) interface{} {
-					return bucket.Stats().Stats[0].Avg()
+					return bucket.Values().Stats()[0].Avg()
 				})
 
 				fmt.Println(fmt.Sprintf("values = %+v", values))

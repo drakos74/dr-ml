@@ -1,35 +1,37 @@
-package xmath
+package buffer
 
 import (
+	"fmt"
 	"math"
-	"time"
 )
 
-// Set is a set of statistical properties of a set of numbers.
-type Set struct {
+// Stats is a set of statistical properties of a set of numbers.
+type Stats struct {
 	count          int
+	sum            float64
 	first, last    float64
 	min, max       float64
 	mean, dSquared float64
 }
 
-// NewSet creates a new Set.
-func NewSet() Set {
-	return Set{
+// NewStats creates a new Stats.
+func NewStats() *Stats {
+	return &Stats{
 		min: math.MaxFloat64,
 	}
 }
 
 // Push adds another element to the set.
-func (s *Set) Push(v float64) {
+func (s *Stats) Push(v float64) {
 	s.count++
+	s.sum += v
 	diff := (v - s.mean) / float64(s.count)
 	mean := s.mean + diff
 	squaredDiff := (v - mean) * (v - s.mean)
 	s.dSquared += squaredDiff
 	s.mean = mean
 
-	if s.first == 0.0 {
+	if s.count == 1 {
 		s.first = v
 	}
 
@@ -45,93 +47,119 @@ func (s *Set) Push(v float64) {
 }
 
 // Avg returns the average value of the set.
-func (s Set) Avg() float64 {
+func (s Stats) Avg() float64 {
 	return s.mean
 }
 
+// Avg returns the average value of the set.
+func (s Stats) Sum() float64 {
+	return s.sum
+}
+
+// Count returns the number of elements.
+func (s Stats) Count() int {
+	return s.count
+}
+
 // Diff returns the difference of max and min.
-func (s Set) Diff() float64 {
+func (s Stats) Diff() float64 {
 	return s.last - s.first
 }
 
 // Variance is the mathematical variance of the set.
-func (s Set) Variance() float64 {
+func (s Stats) Variance() float64 {
 	return s.dSquared / float64(s.count)
 }
 
 // StDev is the standard deviation of the set.
-func (s Set) StDev() float64 {
+func (s Stats) StDev() float64 {
 	return math.Sqrt(s.Variance())
 }
 
 // SampleVariance is the sample variance of the set.
-func (s Set) SampleVariance() float64 {
+func (s Stats) SampleVariance() float64 {
 	return s.dSquared / float64(s.count-1)
 }
 
 // SampleStDev is the sample standard deviation of the set.
-func (s Set) SampleStdev() float64 {
+func (s Stats) SampleStDev() float64 {
 	return math.Sqrt(s.SampleVariance())
 }
 
-// Stats gathers stats about a set of floats
-type Stats struct {
-	Iteration int
-	Set
+// StatsCollector is a collection of Stats variables.
+// This enabled multi-dimensional tracking.
+type StatsCollector struct {
+	dim   int
+	stats []*Stats
 }
 
-// NewStats creates a new stats struct.
-// It allows to pass already gathered elements.
-func NewStats(vv ...float64) *Stats {
-	stats := &Stats{
-		Iteration: 0,
-		Set:       NewSet(),
+// NewStatsCollector creates a new Stats collector.
+func NewStatsCollector(dim int) *StatsCollector {
+	stats := make([]*Stats, dim)
+	for i := 0; i < dim; i++ {
+		stats[i] = NewStats()
 	}
-	for _, v := range vv {
-		stats.Push(v)
+	return &StatsCollector{
+		dim:   dim,
+		stats: stats,
 	}
-	return stats
 }
 
-// Inc adds another stats element to the set.
-func (s *Stats) Inc(v float64) {
-	s.Iteration++
-	s.Set.Push(v)
+// Push pushes each value to the corresponding dimension.
+func (sc *StatsCollector) Push(v ...float64) {
+	if len(v) != sc.dim {
+		panic(fmt.Sprintf("inconsistent dimensions %d vs %d", len(v), sc.dim))
+	}
+	for i := 0; i < len(sc.stats); i++ {
+		sc.stats[i].Push(v[i])
+	}
+}
+
+func (sc StatsCollector) Stats() []*Stats {
+	return sc.stats
+}
+
+// Push pushes each value to the corresponding dimension.
+func (sc *StatsCollector) Size() int {
+	// we expect all buffer to have the same size
+	return sc.stats[0].count
 }
 
 // Bucket groups together objects with the same Index
 // it keeps track of statistical quantities relating to the collection
-// by using streaming techniques
+// by using the stats
 type Bucket struct {
-	stats Set
+	stats *StatsCollector
 	index int64
 }
 
 // NewBucket creates a new bucket
-func NewBucket(id int64) Bucket {
+func NewBucket(id int64, dim int) Bucket {
 	return Bucket{
-		stats: NewSet(),
+		stats: NewStatsCollector(dim),
 		index: id,
 	}
 }
 
 // Push adds an element to the bucket for the given index.
-func (b *Bucket) Push(v float64, index int64) bool {
+// it returns true if the bucket has the right index, false otherwise.
+// This allows to build higher level abstractions i.e. window etc ...
+func (b *Bucket) Push(index int64, v ...float64) bool {
 	if index != b.index {
 		return false
 	}
-	b.stats.Push(v)
+	b.stats.Push(v...)
 	return true
 }
 
 // Size returns the number of elements in the bucket.
 func (b Bucket) Size() int {
-	return b.stats.count
+	return b.stats.Size()
 }
 
-// Stats returns the current stats for the bucket.
-func (b Bucket) Stats() Set {
-	return b.stats
+// Stats returns the current Stats for the bucket.
+func (b Bucket) Values() StatsCollector {
+	return *b.stats
 }
 
 // Index returns the bucket index.
@@ -139,7 +167,8 @@ func (b Bucket) Index() int64 {
 	return b.index
 }
 
-// Window is a helper struct allowing to retrieve buckets of stats from a streaming data set.
+// Window is a helper struct allowing to retrieve buckets of Stats from a streaming data set.
+// the bucket indexing is based on the time.
 type Window struct {
 	size      int64
 	lastIndex int64
@@ -150,14 +179,16 @@ type Window struct {
 // NewWindow creates a new window of the given window size e.g. the index range for each bucket.
 func NewWindow(size int64) *Window {
 	return &Window{
-		size: size,
+		size:    size,
+		current: NewBucket(0, int(size)),
 	}
 }
 
 // Push adds an element to a window at the given index.
-// returns if the window closed.
-// and the index of the closed window
-func (w *Window) Push(index int64, value float64) (int64, bool) {
+// returns if the window closed, e.g. if last element initiated a new bucket.
+// (Note that based on this logic we ll only know when a window closed only on the initiation of a new one)
+// and the index of the closed window.
+func (w *Window) Push(index int64, value ...float64) (int64, bool) {
 
 	ready := false
 
@@ -166,7 +197,7 @@ func (w *Window) Push(index int64, value float64) (int64, bool) {
 	if index == 0 {
 		// new start ...
 		w.lastIndex = index
-		w.current = NewBucket(index)
+		w.current = NewBucket(index, len(value))
 	} else if index >= w.lastIndex+w.size {
 		// start a new one
 		// but first close the last one
@@ -180,11 +211,11 @@ func (w *Window) Push(index int64, value float64) (int64, bool) {
 			ready = true
 		}
 
-		w.current = NewBucket(index)
+		w.current = NewBucket(index, len(value))
 		w.lastIndex = index
 	}
 
-	w.current.Push(value, w.lastIndex)
+	w.current.Push(w.lastIndex, value...)
 
 	return lastIndex, ready
 
@@ -207,46 +238,7 @@ func (w *Window) Get() Bucket {
 	return tmpBucket
 }
 
-// TimeWindow is a window indexed by the current time.
-type TimeWindow struct {
-	index    int64
-	duration int64
-	window   *Window
-}
-
-// NewTimeWindow creates a new TimeWindow with the given duration.
-func NewTimeWindow(duration time.Duration) *TimeWindow {
-	d := int64(duration.Seconds())
-	return &TimeWindow{
-		duration: d,
-		window:   NewWindow(1),
-	}
-}
-
-// Push adds an element to the time window.
-func (tw *TimeWindow) Push(v float64, t time.Time) (*Bucket, bool) {
-
-	index := t.Unix() / tw.duration
-
-	index, closed := tw.window.Push(index, v)
-
-	if closed {
-		tw.index = index
-		bucket := tw.window.Get()
-		return &bucket, true
-	}
-
-	return nil, false
-
-}
-
-// Next returns the next timestamp for the coming window.
-func (tw *TimeWindow) Next(iterations int64) time.Time {
-	nextIndex := tw.index + tw.duration*(iterations+1)
-	return time.Unix(nextIndex*int64(time.Second.Seconds()), 0)
-}
-
-// TimeWindow is a window indexed by the current time.
+// SizeWindow is a window indexed by the current time.
 type SizeWindow struct {
 	i      int64
 	window *Window
@@ -274,14 +266,4 @@ func (sw *SizeWindow) Push(v float64) (*Bucket, bool) {
 
 	return nil, false
 
-}
-
-// Inp keeps all rows of a matrix except the last.
-func Inp(s Matrix) Matrix {
-	return Mat(len(s) - 1).With(s[:len(s)-1]...)
-}
-
-// Outp keeps all rows of a matrix except for the first.
-func Outp(s Matrix) Matrix {
-	return Mat(len(s) - 1).With(s[1:]...)
 }

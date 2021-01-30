@@ -1,23 +1,21 @@
 package rc
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
 	"github.com/drakos74/go-ex-machina/xmachina/net"
 	"github.com/drakos74/go-ex-machina/xmath"
-	"github.com/drakos74/go-ex-machina/xmath/time"
-	"github.com/rs/zerolog/log"
+	"github.com/drakos74/go-ex-machina/xmath/buffer"
 )
 
 type Network struct {
 	net.Config
 	Layer
-	*xmath.Stats
+	*buffer.Stats
 
 	loss                            ml.MLoss
-	predictInput, trainOutput       *time.Window
+	predictInput, trainOutput       *buffer.VectorRing
 	inputTransform, outputTransform func(matrix xmath.Matrix) xmath.Matrix
 }
 
@@ -27,19 +25,19 @@ type Network struct {
 func New(n int, layerFactory LayerFactory, clipping net.Clip) *Network {
 	return &Network{
 		Layer:        layerFactory(n, clipping, 0),
-		predictInput: time.NewWindow(n),
-		trainOutput:  time.NewWindow(n + 1),
+		predictInput: buffer.NewVectorRing(n),
+		trainOutput:  buffer.NewVectorRing(n + 1),
 		loss: func(expected, output xmath.Matrix) xmath.Vector {
 			return expected.Dop(func(x, y float64) float64 {
 				return x - y
 			}, output).Sum()
 		},
-		Stats: xmath.NewStats(),
+		Stats: buffer.NewStats(),
 		inputTransform: func(matrix xmath.Matrix) xmath.Matrix {
-			return xmath.Inp(matrix)
+			return buffer.Inp(matrix)
 		},
 		outputTransform: func(matrix xmath.Matrix) xmath.Matrix {
-			return xmath.Outp(matrix)
+			return buffer.Outp(matrix)
 		},
 	}
 }
@@ -74,16 +72,17 @@ func (net *Network) Train(data xmath.Vector, outputData xmath.Vector) (err xmath
 
 		// backward pass
 		net.Backward(exp)
-		// update stats
-		net.Inc(loss.Sum())
-		// log progress
-		if net.Iteration%1000 == 0 {
-			log.Info().
-				Int("epoch", net.Iteration).
-				Float64("err", loss.Sum()).
-				Str("mean-err", fmt.Sprintf("%+v", net.Stats)).
-				Msg("training iteration")
-		}
+		// update buffer
+		// TODO:
+		//net.Inc(loss.Sum())
+		//// log progress
+		//if net.Iteration%1000 == 0 {
+		//	log.Info().
+		//		Int("epoch", net.Iteration).
+		//		Float64("err", loss.Sum()).
+		//		Str("mean-err", fmt.Sprintf("%+v", net.Stats)).
+		//		Msg("training iteration")
+		//}
 	}
 
 	if net.HasTraceEnabled() {

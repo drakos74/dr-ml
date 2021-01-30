@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/drakos74/go-ex-machina/xmath/algebra"
 
 	"github.com/rs/zerolog"
 
@@ -23,7 +23,7 @@ func TestNeuron_SimpleForward(t *testing.T) {
 
 	module := ml.Base()
 
-	neuron := Perceptron(module, xmath.Const(0.5))(2, net.Meta{})
+	neuron := Perceptron(module, algebra.Const(0.5))(2, net.Meta{})
 
 	result := neuron.forward([]float64{1, 0})
 
@@ -36,7 +36,7 @@ func TestNeuron_SimpleForward_NegWeights(t *testing.T) {
 
 	module := ml.Base()
 
-	neuron := Perceptron(module, xmath.Const(-0.5))(2, net.Meta{})
+	neuron := Perceptron(module, algebra.Const(-0.5))(2, net.Meta{})
 
 	result := neuron.forward([]float64{-1, 1})
 
@@ -49,13 +49,13 @@ func TestNeuron_ZeroErrorBackward(t *testing.T) {
 
 	module := ml.Base()
 
-	weights := xmath.Const(0.5)
+	weights := algebra.Const(0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
 	neuron.forward([]float64{1, 0})
 
 	v := neuron.backward(0)
 
-	assert.Equal(t, xmath.Const(0.0)(2, 0), v)
+	assert.Equal(t, algebra.Const(0.0)(2, 0), v)
 
 	assert.Equal(t, weights(2, 0), neuron.weights)
 
@@ -65,7 +65,7 @@ func TestNeuron_GreaterErrorBackward(t *testing.T) {
 
 	module := ml.Base()
 
-	weights := xmath.Const(0.5)
+	weights := algebra.Const(0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
 
 	expected := 1.0
@@ -89,7 +89,7 @@ func TestNeuron_GreaterErrorBackward_NegWeights(t *testing.T) {
 
 	module := ml.Base()
 
-	weights := xmath.Const(-0.5)
+	weights := algebra.Const(-0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
 
 	expected := 1.0
@@ -113,7 +113,7 @@ func TestNeuron_SmallerErrorBackward(t *testing.T) {
 
 	module := ml.Base().WithRate(ml.Learn(10, 0.05))
 
-	weights := xmath.Const(0.5)
+	weights := algebra.Const(0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
 
 	expected := 0.1
@@ -137,7 +137,7 @@ func TestNeuron_BinaryClassification(t *testing.T) {
 
 	module := ml.Base()
 
-	weights := xmath.Const(0.5)
+	weights := algebra.Const(0.5)
 	neuron := Perceptron(module, weights)(2, net.Meta{})
 
 	inp1 := []float64{0, 1}
@@ -184,7 +184,7 @@ func TestNeuron_SigmoidActivationLimit(t *testing.T) {
 
 	module := ml.Base()
 
-	neuron := Perceptron(module, xmath.Const(-0.5))(2, net.Meta{})
+	neuron := Perceptron(module, algebra.Const(-0.5))(2, net.Meta{})
 
 	expected := 10.0
 	var r float64

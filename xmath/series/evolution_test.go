@@ -1,4 +1,4 @@
-package xmath
+package series
 
 import (
 	"fmt"
@@ -95,7 +95,7 @@ func TestEvolution_Run(t *testing.T) {
 
 	for ev.Next() {
 		k := fmt.Sprintf("[%v,%v,%v]", a, b, c)
-		// check that every evolution is a unnique combination
+		// check that every series is a unnique combination
 		_, ok := evolutions[k]
 		assert.False(t, ok)
 		evolutions[k] = struct{}{}

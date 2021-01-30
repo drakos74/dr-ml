@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath"
+	"github.com/drakos74/go-ex-machina/xmath/algebra"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -80,7 +80,7 @@ func TestSoftMax_Function(t *testing.T) {
 	softmax := SoftMax{}
 
 	for i := 0; i < 100; i++ {
-		v := xmath.Rand(0, 10, xmath.Unit)(100, 0)
+		v := algebra.Rand(0, 10, algebra.Unit)(100, 0)
 		w := softmax.F(v)
 		assert.Equal(t, "1.00", strconv.FormatFloat(w.Sum(), 'f', 2, 64))
 	}
@@ -91,7 +91,7 @@ func TestSoftMax_Derivative(t *testing.T) {
 
 	softmax := SoftMax{}
 
-	x0 := xmath.Vec(2).With(1, 2)
+	x0 := algebra.Vec(2).With(1, 2)
 	println(fmt.Sprintf("x0 = %v", x0))
 	y0 := softmax.F(x0)
 	println(fmt.Sprintf("y0 = %v", y0))
@@ -100,9 +100,9 @@ func TestSoftMax_Derivative(t *testing.T) {
 	assert.True(t, math.Abs(1-y0.Sum()) < 0.01)
 
 	div := softmax.D(y0)
-	assert.Equal(t, xmath.Mat(2).With(
-		xmath.Vec(2).With(0.19661193, -0.19661193),
-		xmath.Vec(2).With(-0.19661193, 0.19661193),
-	), div.Op(xmath.Round(8)))
+	assert.Equal(t, algebra.Mat(2).With(
+		algebra.Vec(2).With(0.19661193, -0.19661193),
+		algebra.Vec(2).With(-0.19661193, 0.19661193),
+	), div.Op(algebra.Round(8)))
 
 }

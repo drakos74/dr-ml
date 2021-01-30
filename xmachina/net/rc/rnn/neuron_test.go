@@ -5,8 +5,6 @@ import (
 	"math"
 	"testing"
 
-	"github.com/drakos74/go-ex-machina/xmath"
-
 	"github.com/drakos74/go-ex-machina/xmachina/net/rc"
 
 	"github.com/drakos74/go-ex-machina/xmachina/ml"
@@ -29,11 +27,11 @@ func TestRNeuron_DimensionsInForwardPass(t *testing.T) {
 
 	sequenceLength := 10
 
-	xt := xmath.Mat(sequenceLength).Generate(3, xmath.Rand(-1, 1, math.Sqrt))
-	h0 := xmath.Mat(sequenceLength).Generate(10, xmath.Rand(-1, 1, math.Sqrt))
+	xt := xmath2.algebra.Mat(sequenceLength).Generate(3, xmath2.algebra.Rand(-1, 1, math.Sqrt))
+	h0 := xmath2.algebra.Mat(sequenceLength).Generate(10, xmath2.algebra.Rand(-1, 1, math.Sqrt))
 
-	y := xmath.Mat(sequenceLength)
-	wh := xmath.Mat(sequenceLength)
+	y := xmath2.algebra.Mat(sequenceLength)
+	wh := xmath2.algebra.Mat(sequenceLength)
 
 	for i := 0; i < len(xt); i++ {
 		y[i], wh[i] = rNeuron.forward(xt[i], h0[i])
@@ -47,7 +45,7 @@ func TestRNeuron_Train(t *testing.T) {
 
 	type test struct {
 		inp, outp, hidden int
-		input, expected   xmath.Vector
+		input, expected   xmath2.algebra
 		iterations        int
 	}
 
@@ -56,40 +54,40 @@ func TestRNeuron_Train(t *testing.T) {
 			inp:        5,
 			outp:       5,
 			hidden:     10,
-			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
-			expected:   xmath.Vec(5).With(0.2, 0.3, 0.4, 0.5, 0.6),
+			input:      xmath2.algebra.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
+			expected:   xmath2.algebra.Vec(5).With(0.2, 0.3, 0.4, 0.5, 0.6),
 			iterations: 100,
 		},
 		"decreasing-sequence": {
 			inp:        5,
 			outp:       5,
 			hidden:     10,
-			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
-			expected:   xmath.Vec(5).With(0.9, 0.8, 0.7, 0.6, 0.5),
+			input:      xmath2.algebra.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
+			expected:   xmath2.algebra.Vec(5).With(0.9, 0.8, 0.7, 0.6, 0.5),
 			iterations: 50,
 		},
 		"iterating-sequence": {
 			inp:        5,
 			outp:       5,
 			hidden:     10,
-			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
-			expected:   xmath.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
+			input:      xmath2.algebra.Vec(5).With(0.1, 0.2, 0.3, 0.4, 0.5),
+			expected:   xmath2.algebra.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
 			iterations: 50,
 		},
 		"event-trigger-thin": {
 			inp:        5,
 			outp:       5,
 			hidden:     10,
-			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
-			expected:   xmath.Vec(5).With(0.1, 0.1, 0.9, 0.1, 0.1),
+			input:      xmath2.algebra.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
+			expected:   xmath2.algebra.Vec(5).With(0.1, 0.1, 0.9, 0.1, 0.1),
 			iterations: 60,
 		},
 		"event-trigger-thick": {
 			inp:        5,
 			outp:       5,
 			hidden:     30,
-			input:      xmath.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
-			expected:   xmath.Vec(5).With(0.1, 0.1, 0.9, 0.1, 0.1),
+			input:      xmath2.algebra.Vec(5).With(0.1, 0.2, 0.3, 0.2, 0.1),
+			expected:   xmath2.algebra.Vec(5).With(0.1, 0.1, 0.9, 0.1, 0.1),
 			iterations: 50,
 		},
 	}
@@ -102,13 +100,13 @@ func TestRNeuron_Train(t *testing.T) {
 
 }
 
-func trainNeuron(t *testing.T, inp, outp, hidden int, input, expected xmath.Vector, iterations int) {
+func trainNeuron(t *testing.T, inp, outp, hidden int, input, expected xmath2.algebra, iterations int) {
 
 	rneuron := testNeuronFactory(inp, outp, hidden)(net.Meta{})
 
-	y := xmath.Vec(outp)
-	h := xmath.Vec(hidden)
-	err := xmath.Vec(outp)
+	y := xmath2.algebra.Vec(outp)
+	h := xmath2.algebra.Vec(hidden)
+	err := xmath2.algebra.Vec(outp)
 
 	var loss float64
 	for i := 0; i < iterations; i++ {
@@ -130,7 +128,7 @@ func trainNeuron(t *testing.T, inp, outp, hidden int, input, expected xmath.Vect
 func testNeuronFactory(x, y, h int) NeuronFactory {
 	builder := rc.NewNeuronBuilder(x, y, h).
 		WithActivation(ml.TanH, ml.Sigmoid).
-		WithWeights(xmath.Rand(-1, 1, math.Sqrt), xmath.Rand(-1, 1, math.Sqrt)).
+		WithWeights(xmath2.algebra.Rand(-1, 1, math.Sqrt), xmath2.algebra.Rand(-1, 1, math.Sqrt)).
 		WithRate(*ml.Learn(0.05, 0.05))
 	return Neuron(*builder)
 }
@@ -138,6 +136,6 @@ func testNeuronFactory(x, y, h int) NeuronFactory {
 func testNeuronBuilder(x, y, h int) *rc.NeuronBuilder {
 	return rc.NewNeuronBuilder(x, y, h).
 		WithActivation(ml.TanH, ml.Sigmoid).
-		WithWeights(xmath.Const(0.5), xmath.Const(0.5)).
+		WithWeights(xmath2.algebra.Const(0.5), xmath2.algebra.Const(0.5)).
 		WithRate(*ml.Learn(0.05, 0.05))
 }
