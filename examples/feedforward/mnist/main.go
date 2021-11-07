@@ -54,7 +54,7 @@ func main() {
 	ctx, cnl := context.WithCancel(context.Background())
 	go xmachina.TrainInStream(ctx, config, network, data, ack)
 
-	_, _, err := xmachina.ReadFile("examples/mnist/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
+	_, _, err := xmachina.ReadFile("examples/feedforward/mnist/data/mnist_train.csv", 0, 5, parseMnistLine, data, config.Epoch, ack)
 
 	if err != nil {
 		log.Fatalf("could not read file: %v", err)
@@ -66,7 +66,7 @@ func main() {
 
 	// score the network
 
-	checkFile, _ := os.Open("examples/mnist/mnist_test.csv")
+	checkFile, _ := os.Open("examples/feedforward/mnist/data/mnist_test.csv")
 	defer checkFile.Close()
 
 	score := 0

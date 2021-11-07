@@ -8,6 +8,7 @@ type NN interface {
 	NetworkConfig
 	Train(input xmath.Vector, output xmath.Vector) (err xmath.Vector, weights map[Meta]Weights)
 	Predict(input xmath.Vector) xmath.Vector
+	GetInfo() Info
 }
 
 // Info holds metadata information for the Network

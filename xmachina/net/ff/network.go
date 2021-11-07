@@ -93,6 +93,10 @@ func (n *Network) Predict(input xmath.Vector) xmath.Vector {
 	return n.forward(input)
 }
 
+func (n *Network) GetInfo() net.Info {
+	return n.Info
+}
+
 type XNetwork struct {
 	*Network
 }
